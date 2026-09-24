@@ -22,6 +22,18 @@ beforeEach(() => {
 })
 
 describe('ProductForm', () => {
+  it('muestra el error si se pasa por props (ej. codigo duplicado)', () => {
+    render(<ProductForm error="Ya existe un producto con ese código" onSave={() => {}} onCancel={() => {}} />)
+
+    expect(screen.getByText('Ya existe un producto con ese código')).toBeInTheDocument()
+  })
+
+  it('crear: precarga el codigo cuando viene de un escaneo sin coincidencia', () => {
+    render(<ProductForm codigoInicial="7791234567890" onSave={() => {}} onCancel={() => {}} />)
+
+    expect(screen.getByLabelText(/código/i)).toHaveValue('7791234567890')
+  })
+
   it('crear: carga los datos y llama a onSave', async () => {
     const onSave = vi.fn()
     const user = userEvent.setup()

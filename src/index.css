@@ -310,3 +310,62 @@ button:disabled {
   width: auto;
   padding: 0;
 }
+
+.movement-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.movement-form-producto {
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-weight: 500;
+  margin: 12px 0 0;
+}
+
+.movement-picker input[type="search"] {
+  width: 100%;
+  margin: 12px 0;
+}
+
+.movement-picker-lista {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  background: var(--surface);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.movement-picker-lista li {
+  border-bottom: 1px solid #e6e4de;
+}
+
+.movement-picker-lista li:last-child {
+  border-bottom: none;
+}
+
+.movement-picker-lista button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 500;
+  padding: 14px;
+}
+
+.barcode-scanner-video {
+  width: 100%;
+  border-radius: 6px;
+  margin: 12px 0;
+  background: #000;
+}
+
+.export-button {
+  width: 100%;
+  margin-top: 10px;
+  background: transparent;
+  color: var(--stamp-blue);
+  border: 1px solid #dcdad4;
+}

@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { useCategorias } from '../hooks/useCategorias.js'
 import { useProveedores } from '../hooks/useProveedores.js'
 
-export default function ProductForm ({ producto, proveedoresSeleccionados = [], onSave, onCancel }) {
+export default function ProductForm ({ producto, codigoInicial = '', proveedoresSeleccionados = [], error, onSave, onCancel }) {
   const { categorias } = useCategorias()
   const { proveedores } = useProveedores()
 
-  const [id, setId] = useState(producto?.id ?? '')
+  const [id, setId] = useState(producto?.id ?? codigoInicial)
   const [nombre, setNombre] = useState(producto?.nombre ?? '')
   const [categoriaId, setCategoriaId] = useState(producto?.categoria_id ?? '')
   const [precioVenta, setPrecioVenta] = useState(producto?.precio_venta ?? '')
@@ -130,6 +130,8 @@ export default function ProductForm ({ producto, proveedoresSeleccionados = [], 
           </label>
         ))}
       </fieldset>
+
+      {error && <p className="login-error">{error}</p>}
 
       <div className="form-actions">
         <button type="button" onClick={onCancel}>Cancelar</button>

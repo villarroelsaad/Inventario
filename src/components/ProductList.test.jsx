@@ -6,6 +6,8 @@ const setFiltros = vi.fn()
 const useProductosMock = vi.fn()
 const useCategoriasMock = vi.fn()
 const useProveedoresMock = vi.fn()
+const generarCsvProductos = vi.fn()
+const descargarCsv = vi.fn()
 
 vi.mock('../hooks/useProductos.js', () => ({
   useProductos: (...args) => useProductosMock(...args)
@@ -15,6 +17,10 @@ vi.mock('../hooks/useCategorias.js', () => ({
 }))
 vi.mock('../hooks/useProveedores.js', () => ({
   useProveedores: (...args) => useProveedoresMock(...args)
+}))
+vi.mock('../services/exportCsv.js', () => ({
+  generarCsvProductos: (...args) => generarCsvProductos(...args),
+  descargarCsv: (...args) => descargarCsv(...args)
 }))
 
 const { default: ProductList } = await import('./ProductList.jsx')
@@ -29,6 +35,8 @@ beforeEach(() => {
   useProductosMock.mockReset()
   useCategoriasMock.mockReset()
   useProveedoresMock.mockReset()
+  generarCsvProductos.mockReset()
+  descargarCsv.mockReset()
   useProductosMock.mockReturnValue({ productos, filtros: {}, setFiltros, loading: false, error: null })
   useCategoriasMock.mockReturnValue({ categorias: [{ id: 'c1', nombre: 'Bebidas' }] })
   useProveedoresMock.mockReturnValue({ proveedores: [{ id: 'p1', nombre: 'Distribuidora Sur' }] })
@@ -86,5 +94,16 @@ describe('ProductList', () => {
     await user.click(screen.getByRole('button', { name: /agregar producto/i }))
 
     expect(onAdd).toHaveBeenCalled()
+  })
+
+  it('tocar exportar genera el CSV con los productos y categorías actuales y lo descarga', async () => {
+    generarCsvProductos.mockReturnValue('Código,Nombre\nA1,Yerba')
+    const user = userEvent.setup()
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    await user.click(screen.getByRole('button', { name: /exportar/i }))
+
+    expect(generarCsvProductos).toHaveBeenCalledWith(productos, [{ id: 'c1', nombre: 'Bebidas' }])
+    expect(descargarCsv).toHaveBeenCalledWith(expect.stringMatching(/^productos.*\.csv$/), 'Código,Nombre\nA1,Yerba')
   })
 })

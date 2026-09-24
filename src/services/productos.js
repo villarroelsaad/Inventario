@@ -39,6 +39,14 @@ export async function listarProductos ({ busqueda, categoriaId, proveedorId, pre
   return data.map(({ producto_proveedor, ...producto }) => producto)
 }
 
+export async function obtenerProductoPorId (id) {
+  const { data, error } = await supabase.from('productos').select('*').eq('id', id).single()
+  if (error) {
+    return null
+  }
+  return data
+}
+
 export async function crearProducto (datos) {
   const { data, error } = await supabase.from('productos').insert(datos).select().single()
   if (error) {

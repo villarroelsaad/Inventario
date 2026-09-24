@@ -1,6 +1,7 @@
 import { useProductos } from '../hooks/useProductos.js'
 import { useCategorias } from '../hooks/useCategorias.js'
 import { useProveedores } from '../hooks/useProveedores.js'
+import { generarCsvProductos, descargarCsv } from '../services/exportCsv.js'
 
 export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) {
   const { productos, filtros, setFiltros, loading, error } = useProductos()
@@ -11,6 +12,12 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
 
   function actualizarFiltro (campo, valor) {
     setFiltros({ ...filtros, [campo]: valor || undefined })
+  }
+
+  function handleExportar () {
+    const csv = generarCsvProductos(productos, categorias)
+    const fecha = new Date().toISOString().slice(0, 10)
+    descargarCsv(`productos-${fecha}.csv`, csv)
   }
 
   return (
@@ -87,6 +94,7 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
         <button type="button" onClick={() => onMovimiento('salida')}>− Salida</button>
       </div>
       <button type="button" onClick={onAdd}>+ Agregar producto</button>
+      <button type="button" onClick={handleExportar} className="export-button">Exportar</button>
     </section>
   )
 }

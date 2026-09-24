@@ -31,6 +31,7 @@ vi.mock('../lib/supabaseClient.js', () => ({
 
 const {
   listarProductos,
+  obtenerProductoPorId,
   crearProducto,
   actualizarProducto,
   borrarProducto,
@@ -86,6 +87,28 @@ describe('listarProductos', () => {
     expect(builder.select).toHaveBeenCalledWith('*, producto_proveedor!inner(proveedor_id)')
     expect(builder.eq).toHaveBeenCalledWith('producto_proveedor.proveedor_id', 'p1')
     expect(productos).toEqual([{ id: 'A1', nombre: 'Yerba' }])
+  })
+})
+
+describe('obtenerProductoPorId', () => {
+  it('devuelve el producto si el codigo existe', async () => {
+    const builder = makeQueryBuilder({ data: { id: 'A1', nombre: 'Yerba' }, error: null })
+    from.mockReturnValue(builder)
+
+    const producto = await obtenerProductoPorId('A1')
+
+    expect(from).toHaveBeenCalledWith('productos')
+    expect(builder.eq).toHaveBeenCalledWith('id', 'A1')
+    expect(producto).toEqual({ id: 'A1', nombre: 'Yerba' })
+  })
+
+  it('devuelve null si el codigo no existe', async () => {
+    const builder = makeQueryBuilder({ data: null, error: { code: 'PGRST116' } })
+    from.mockReturnValue(builder)
+
+    const producto = await obtenerProductoPorId('NOEXISTE')
+
+    expect(producto).toBeNull()
   })
 })
 
