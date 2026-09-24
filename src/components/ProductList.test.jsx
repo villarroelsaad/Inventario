@@ -50,12 +50,14 @@ describe('ProductList', () => {
     expect(screen.getByText('Aceite')).toBeInTheDocument()
   })
 
-  it('muestra el banner de alerta cuando hay stock bajo', () => {
+  it('la tarjeta de stat muestra la cantidad de productos con stock bajo', () => {
     render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
-    expect(screen.getByText(/stock bajo/i)).toBeInTheDocument()
+    const tile = screen.getByText('Stock bajo').closest('.stat-tile')
+    expect(tile).toHaveTextContent('1')
+    expect(tile).toHaveClass('alerta')
   })
 
-  it('no muestra el banner si ningun producto esta bajo de stock', () => {
+  it('la tarjeta de stock bajo muestra 0 y sin alerta si ningun producto esta bajo de stock', () => {
     useProductosMock.mockReturnValue({
       productos: [{ id: 'A1', nombre: 'Yerba', stock: 24, stock_minimo: 5, precio_venta: 3200 }],
       filtros: {},
@@ -64,7 +66,17 @@ describe('ProductList', () => {
       error: null
     })
     render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
-    expect(screen.queryByText(/stock bajo/i)).not.toBeInTheDocument()
+    const tile = screen.getByText('Stock bajo').closest('.stat-tile')
+    expect(tile).toHaveTextContent('0')
+    expect(tile).not.toHaveClass('alerta')
+  })
+
+  it('muestra las tarjetas de productos, proveedores y valor en stock', () => {
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+    expect(screen.getByText('Proveedores')).toBeInTheDocument()
+    expect(screen.getByText('Valor en stock')).toBeInTheDocument()
+    // Yerba: 3200*24 + Aceite: 4100*2 = 85000
+    expect(screen.getByText('$85.000')).toBeInTheDocument()
   })
 
   it('escribir en el buscador actualiza los filtros', async () => {

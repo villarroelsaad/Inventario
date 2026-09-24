@@ -25,6 +25,7 @@ export default function App () {
   const [movimientoDesdeDetalle, setMovimientoDesdeDetalle] = useState(false)
   const [codigoEscaneado, setCodigoEscaneado] = useState('')
   const [productoError, setProductoError] = useState(null)
+  const [sidebarColapsada, setSidebarColapsada] = useState(false)
 
   if (loading) {
     return null
@@ -57,6 +58,14 @@ export default function App () {
     setCodigoEscaneado('')
     setProductoError(null)
     setVista('producto-form')
+  }
+
+  function handleCancelarForm () {
+    if (productoActivo) {
+      setVista('producto-detalle')
+    } else {
+      irAInicio()
+    }
   }
 
   async function handleGuardarProducto (datos, proveedorIds, imagenFile, cantidadInicial) {
@@ -138,88 +147,127 @@ export default function App () {
     setVista(tipoMovimiento ? 'movimiento-elegir-producto' : 'inicio')
   }
 
+  function cerrarModalActivo () {
+    if (vista === 'producto-detalle') irAInicio()
+    else if (vista === 'producto-form') handleCancelarForm()
+    else if (vista === 'movimiento-form') cancelarMovimiento()
+    else if (vista === 'escaneo') cancelarEscaneo()
+  }
+
+  const vistaModal = ['producto-detalle', 'producto-form', 'movimiento-form', 'escaneo'].includes(vista)
+
   return (
-    <main className="app">
+    <div className={sidebarColapsada ? 'app-shell colapsada' : 'app-shell'}>
       <nav className="app-nav">
-        <button type="button" onClick={irAInicio}>Inicio</button>
-        <button type="button" onClick={() => setVista('categorias')}>Categorías</button>
-        <button type="button" onClick={() => setVista('proveedores')}>Proveedores</button>
+        <div className="app-nav-top">
+          <div className="app-nav-logo">Registro</div>
+          <button
+            type="button"
+            className="app-nav-toggle"
+            onClick={() => setSidebarColapsada((actual) => !actual)}
+            aria-label="Contraer menú"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 6-6 6 6 6" /></svg>
+          </button>
+        </div>
+        <div className="app-nav-links">
+          <button type="button" className={vista === 'inicio' ? 'activo' : ''} onClick={irAInicio}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></svg>
+            <span className="nav-label">Inicio</span>
+          </button>
+          <button type="button" className={vista === 'categorias' ? 'activo' : ''} onClick={() => setVista('categorias')}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+            <span className="nav-label">Categorías</span>
+          </button>
+          <button type="button" className={vista === 'proveedores' ? 'activo' : ''} onClick={() => setVista('proveedores')}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7h18l-1.5 11a2 2 0 0 1-2 1.8H6.5a2 2 0 0 1-2-1.8L3 7Z" /><path d="M8 7V5a4 4 0 0 1 8 0v2" /></svg>
+            <span className="nav-label">Proveedores</span>
+          </button>
+        </div>
       </nav>
 
-      {vista === 'inicio' && (
-        <ProductList
-          onSelect={abrirDetalle}
-          onAdd={abrirFormularioNuevo}
-          onScan={abrirEscaneoStandalone}
-          onMovimiento={handleMovimiento}
-        />
-      )}
-
-      {vista === 'categorias' && <CategoryList />}
-      {vista === 'proveedores' && <SupplierList />}
-
-      {vista === 'producto-detalle' && productoActivo && (
-        <ProductDetail
-          producto={productoActivo}
-          onEdit={abrirFormularioEdicion}
-          onDelete={handleEliminarProducto}
-          onBack={irAInicio}
-          onMovimiento={handleMovimiento}
-        />
-      )}
-
-      {vista === 'producto-form' && (
-        <ProductForm
-          producto={productoActivo}
-          codigoInicial={codigoEscaneado}
-          proveedoresSeleccionados={proveedoresDelProducto}
-          error={productoError}
-          onSave={handleGuardarProducto}
-          onCancel={productoActivo ? () => setVista('producto-detalle') : irAInicio}
-        />
-      )}
-
-      {vista === 'movimiento-elegir-producto' && (
-        <section className="movement-picker">
-          <button type="button" onClick={irAInicio} className="link-button">← Volver</button>
-          <h1>{tipoMovimiento === 'entrada' ? 'Registrar entrada' : 'Registrar salida'}</h1>
-          <p>Elegí el producto:</p>
-          <input
-            type="search"
-            placeholder="Buscar producto..."
-            aria-label="Buscar producto"
-            value={filtros.busqueda ?? ''}
-            onChange={(e) => setFiltros({ ...filtros, busqueda: e.target.value })}
+      <main className="app-content">
+        {vista === 'inicio' && (
+          <ProductList
+            onSelect={abrirDetalle}
+            onAdd={abrirFormularioNuevo}
+            onScan={abrirEscaneoStandalone}
+            onMovimiento={handleMovimiento}
           />
-          <button type="button" onClick={abrirEscaneoParaMovimiento}>Escanear código</button>
-          <ul className="movement-picker-lista">
-            {productos.map((p) => (
-              <li key={p.id}>
-                <button type="button" onClick={() => elegirProductoParaMovimiento(p)}>
-                  {p.nombre} — stock: {p.stock}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+        )}
 
-      {vista === 'movimiento-form' && productoActivo && (
-        <MovementForm
-          producto={productoActivo}
-          tipo={tipoMovimiento}
-          error={movimientoError}
-          onSave={handleGuardarMovimiento}
-          onCancel={cancelarMovimiento}
-        />
-      )}
+        {vista === 'categorias' && <CategoryList />}
+        {vista === 'proveedores' && <SupplierList />}
 
-      {vista === 'escaneo' && (
-        <BarcodeScanner
-          onDetected={manejarCodigoEscaneado}
-          onCancel={cancelarEscaneo}
-        />
+        {vista === 'movimiento-elegir-producto' && (
+          <section className="movement-picker">
+            <button type="button" onClick={irAInicio} className="link-button">← Volver</button>
+            <h1>{tipoMovimiento === 'entrada' ? 'Registrar entrada' : 'Registrar salida'}</h1>
+            <p>Elegí el producto:</p>
+            <input
+              type="search"
+              placeholder="Buscar producto..."
+              aria-label="Buscar producto"
+              value={filtros.busqueda ?? ''}
+              onChange={(e) => setFiltros({ ...filtros, busqueda: e.target.value })}
+            />
+            <button type="button" onClick={abrirEscaneoParaMovimiento}>Escanear código</button>
+            <ul className="movement-picker-lista">
+              {productos.map((p) => (
+                <li key={p.id}>
+                  <button type="button" onClick={() => elegirProductoParaMovimiento(p)}>
+                    {p.nombre} — stock: {p.stock}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </main>
+
+      {vistaModal && (
+        <div className="modal-backdrop abierto" onClick={(e) => { if (e.target === e.currentTarget) cerrarModalActivo() }}>
+          <div className="modal-card">
+            {vista === 'producto-detalle' && productoActivo && (
+              <ProductDetail
+                producto={productoActivo}
+                onEdit={abrirFormularioEdicion}
+                onDelete={handleEliminarProducto}
+                onBack={irAInicio}
+                onMovimiento={handleMovimiento}
+              />
+            )}
+
+            {vista === 'producto-form' && (
+              <ProductForm
+                producto={productoActivo}
+                codigoInicial={codigoEscaneado}
+                proveedoresSeleccionados={proveedoresDelProducto}
+                error={productoError}
+                onSave={handleGuardarProducto}
+                onCancel={handleCancelarForm}
+              />
+            )}
+
+            {vista === 'movimiento-form' && productoActivo && (
+              <MovementForm
+                producto={productoActivo}
+                tipo={tipoMovimiento}
+                error={movimientoError}
+                onSave={handleGuardarMovimiento}
+                onCancel={cancelarMovimiento}
+              />
+            )}
+
+            {vista === 'escaneo' && (
+              <BarcodeScanner
+                onDetected={manejarCodigoEscaneado}
+                onCancel={cancelarEscaneo}
+              />
+            )}
+          </div>
+        </div>
       )}
-    </main>
+    </div>
   )
 }

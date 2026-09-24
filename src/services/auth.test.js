@@ -46,6 +46,15 @@ describe('signIn', () => {
 
     await expect(signIn('a@a.com', 'mala')).rejects.toThrow('Usuario o contraseña incorrectos')
   })
+
+  it('el mensaje de error no distingue la causa (evita filtrar si el email existe/está confirmado)', async () => {
+    signInWithPassword.mockResolvedValue({
+      data: { session: null },
+      error: { message: 'Email not confirmed' }
+    })
+
+    await expect(signIn('a@a.com', 'clave123')).rejects.toThrow('Usuario o contraseña incorrectos')
+  })
 })
 
 describe('logOut', () => {

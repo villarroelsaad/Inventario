@@ -23,7 +23,7 @@ describe('Login', () => {
     render(<Login />)
 
     await user.type(screen.getByLabelText(/usuario/i), 'a@a.com')
-    await user.type(screen.getByLabelText(/contraseña/i), 'clave123')
+    await user.type(screen.getByLabelText('Contraseña'), 'clave123')
     await user.click(screen.getByRole('button', { name: /entrar/i }))
 
     expect(login).toHaveBeenCalledWith('a@a.com', 'clave123')
@@ -40,5 +40,19 @@ describe('Login', () => {
     render(<Login />)
     expect(screen.queryByText(/token/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/api/i)).not.toBeInTheDocument()
+  })
+
+  it('el boton de mostrar contraseña alterna el tipo del campo', async () => {
+    const user = userEvent.setup()
+    render(<Login />)
+
+    const campoClave = screen.getByLabelText('Contraseña')
+    expect(campoClave).toHaveAttribute('type', 'password')
+
+    await user.click(screen.getByRole('button', { name: /mostrar contraseña/i }))
+    expect(campoClave).toHaveAttribute('type', 'text')
+
+    await user.click(screen.getByRole('button', { name: /ocultar contraseña/i }))
+    expect(campoClave).toHaveAttribute('type', 'password')
   })
 })
