@@ -53,7 +53,7 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
         <div className="product-detail-proveedores">
           <h2>Proveedores</h2>
           <ul>
-            {proveedores.map((p) => <li key={p.id}>{p.nombre}</li>)}
+            {proveedores.map((p) => <li key={p.id} className="chip">{p.nombre}</li>)}
           </ul>
         </div>
       )}
