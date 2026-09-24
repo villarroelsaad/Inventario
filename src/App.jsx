@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from './hooks/useAuth.js'
 import { useProductos } from './hooks/useProductos.js'
 import { useMovimientos } from './hooks/useMovimientos.js'
+import { useTema } from './hooks/useTema.js'
 import { listarProveedoresDeProducto } from './services/productoProveedor.js'
 import { obtenerProductoPorId } from './services/productos.js'
 import Login from './components/Login.jsx'
@@ -17,6 +18,7 @@ export default function App () {
   const { user, loading } = useAuth()
   const { productos, filtros, setFiltros, crear, actualizar, borrar } = useProductos()
   const { registrar: registrarMovimiento, error: movimientoError } = useMovimientos()
+  const { temaEfectivo, alternarTema } = useTema()
 
   const [vista, setVista] = useState('inicio')
   const [productoActivo, setProductoActivo] = useState(null)
@@ -158,6 +160,17 @@ export default function App () {
 
   return (
     <div className={sidebarColapsada ? 'app-shell colapsada' : 'app-shell'}>
+      <button
+        type="button"
+        className="theme-toggle"
+        onClick={alternarTema}
+        aria-label={temaEfectivo === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+      >
+        {temaEfectivo === 'dark'
+          ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" /></svg>
+          : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>}
+      </button>
+
       <nav className="app-nav">
         <div className="app-nav-top">
           <div className="app-nav-logo">Registro</div>

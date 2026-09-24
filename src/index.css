@@ -19,8 +19,10 @@
     linear-gradient(165deg, #eaf3fd 0%, #b9d9f7 50%, #6fabe6 100%);
 }
 
+/* Modo oscuro: sigue la preferencia del sistema por defecto, pero el toggle manual
+   (useTema.js, atributo data-theme en <html>) tiene la última palabra. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #17181a;
     --surface: #212225;
     --ink: #ece7d9;
@@ -32,6 +34,19 @@
     --alert: #e07364;
     --alert-soft: #3a241f;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #17181a;
+  --surface: #212225;
+  --ink: #ece7d9;
+  --ink-soft: #9aa0a6;
+  --line: #34363a;
+  --primary: #5b96e6;
+  --primary-dark: #8fb8ee;
+  --primary-soft: #223050;
+  --alert: #e07364;
+  --alert-soft: #3a241f;
 }
 
 * {
@@ -221,7 +236,27 @@ body:has(.login) {
   max-width: 480px;
   margin: 0 auto;
   padding: 0 0 88px;
+  position: relative;
 }
+
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  border-radius: 999px;
+  z-index: 15;
+}
+
+.theme-toggle svg { width: 19px; height: 19px; }
 
 .app-nav {
   display: flex;
