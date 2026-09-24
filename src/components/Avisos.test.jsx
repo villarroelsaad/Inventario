@@ -27,6 +27,16 @@ describe('Avisos', () => {
     expect(screen.queryByText('Categoría guardada')).not.toBeInTheDocument()
   })
 
+  it('antes de desaparecer el aviso pasa a estado de salida (fundido)', () => {
+    vi.useFakeTimers()
+    render(<Avisos />)
+
+    act(() => avisar('Proveedor guardado'))
+    act(() => vi.advanceTimersByTime(2900))
+
+    expect(screen.getByText('Proveedor guardado')).toHaveClass('saliendo')
+  })
+
   it('avisar sin nadie escuchando no rompe nada', () => {
     expect(() => avisar('Sin pantalla')).not.toThrow()
   })

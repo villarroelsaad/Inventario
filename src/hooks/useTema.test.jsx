@@ -41,6 +41,20 @@ describe('useTema', () => {
     expect(localStorage.getItem('tema')).toBe('dark')
   })
 
+  it('al cambiar de tema marca el documento un instante para que los colores se deslicen', async () => {
+    vi.useFakeTimers()
+    mockMatchMedia(false)
+    const { useTema } = await import('./useTema.js')
+    const { result } = renderHook(() => useTema())
+
+    act(() => result.current.alternarTema())
+    expect(document.documentElement.classList.contains('tema-cambiando')).toBe(true)
+
+    act(() => vi.advanceTimersByTime(500))
+    expect(document.documentElement.classList.contains('tema-cambiando')).toBe(false)
+    vi.useRealTimers()
+  })
+
   it('si ya habia una preferencia guardada, arranca con esa', async () => {
     mockMatchMedia(false)
     localStorage.setItem('tema', 'dark')

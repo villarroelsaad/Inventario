@@ -3,19 +3,24 @@ import { suscribirAvisos } from '../lib/avisos.js'
 import Icono from './Icono.jsx'
 
 const DURACION_MS = 2800
+const SALIDA_MS = 250
 
 export default function Avisos () {
   const [aviso, setAviso] = useState(null)
 
   useEffect(() => {
-    let temporizador
+    let temporizadorSalida
+    let temporizadorFin
     const desuscribir = suscribirAvisos((texto) => {
-      clearTimeout(temporizador)
-      setAviso({ texto, id: Date.now() })
-      temporizador = setTimeout(() => setAviso(null), DURACION_MS)
+      clearTimeout(temporizadorSalida)
+      clearTimeout(temporizadorFin)
+      setAviso({ texto, id: Date.now(), saliendo: false })
+      temporizadorSalida = setTimeout(() => setAviso((a) => a && { ...a, saliendo: true }), DURACION_MS)
+      temporizadorFin = setTimeout(() => setAviso(null), DURACION_MS + SALIDA_MS)
     })
     return () => {
-      clearTimeout(temporizador)
+      clearTimeout(temporizadorSalida)
+      clearTimeout(temporizadorFin)
       desuscribir()
     }
   }, [])
@@ -23,7 +28,7 @@ export default function Avisos () {
   return (
     <div className="avisos" role="status" aria-live="polite">
       {aviso && (
-        <p key={aviso.id} className="aviso">
+        <p key={aviso.id} className={aviso.saliendo ? 'aviso saliendo' : 'aviso'}>
           <Icono nombre="check" />
           {aviso.texto}
         </p>

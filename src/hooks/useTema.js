@@ -37,6 +37,10 @@ export function useTema () {
 
   function alternarTema () {
     const siguiente = temaEfectivo === 'dark' ? 'light' : 'dark'
+    // Solo mientras dura el cambio, todos los colores se deslizan (ver .tema-cambiando en index.css)
+    const raiz = document.documentElement
+    raiz.classList.add('tema-cambiando')
+    setTimeout(() => raiz.classList.remove('tema-cambiando'), 350)
     try {
       localStorage.setItem(CLAVE, siguiente)
     } catch {

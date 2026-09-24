@@ -454,7 +454,7 @@ body:has(.login) {
   .app-nav-links button:hover:not(.activo) { background: var(--hover); color: var(--ink); }
 }
 
-.app-nav-links button svg { width: 20px; height: 20px; stroke: currentColor; }
+.app-nav-links button svg { width: 20px; height: 20px; stroke: currentColor; flex-shrink: 0; }
 .app-nav-links button.activo { color: var(--primary-dark); background: var(--primary-soft); }
 
 /* Salir: en el celular es un botón redondo arriba a la derecha (la barra de abajo ya
@@ -1655,6 +1655,7 @@ ul:empty { display: none; }
     padding: 20px 12px;
     gap: 20px;
     z-index: auto;
+    transition: width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .app-nav-top {
@@ -1663,9 +1664,21 @@ ul:empty { display: none; }
     justify-content: space-between;
     gap: 6px;
     padding: 0 8px;
+    transition: padding 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), gap 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
   .app-nav-logo { font-size: 1.25rem; font-weight: 900; color: var(--ink); white-space: nowrap; }
+
+  /* Al contraer, los textos se desvanecen y se achican en vez de desaparecer de golpe.
+     Siguen en el DOM (opacidad 0), así los lectores de pantalla los siguen leyendo. */
+  .app-nav-logo,
+  .app-nav .nav-label {
+    display: inline-block;
+    max-width: 160px;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 0.2s ease, max-width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
 
   .app-nav-toggle {
     background: transparent;
@@ -1682,7 +1695,7 @@ ul:empty { display: none; }
   }
 
   .app-nav-toggle:hover { background: var(--surface); color: var(--ink); }
-  .app-nav-toggle svg { width: 15px; height: 15px; stroke: currentColor; }
+  .app-nav-toggle svg { width: 15px; height: 15px; stroke: currentColor; transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
   .app-nav-links { flex-direction: column; gap: 4px; flex: 1; max-width: none; }
 
@@ -1701,8 +1714,7 @@ ul:empty { display: none; }
     z-index: auto;
   }
 
-  .app-nav-links .nav-salir .nav-label { display: inline; }
-  .app-shell.colapsada .app-nav-links .nav-salir .nav-label { display: none; }
+  .app-nav-links .nav-salir .nav-label { display: inline-block; }
   .app-content .list-header { padding-right: 0; }
 
   .app-nav :focus-visible { outline-color: var(--link); }
@@ -1717,17 +1729,18 @@ ul:empty { display: none; }
     color: var(--ink-soft);
     white-space: nowrap;
     overflow: hidden;
+    transition: padding 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .app-nav-links button:hover:not(.activo) { background: var(--surface); color: var(--ink); }
   .app-nav-links button.activo { color: var(--primary-dark); background: var(--surface); box-shadow: 0 1px 2px rgba(6, 12, 28, 0.08); }
 
   .app-shell.colapsada .app-nav { width: 60px; }
-  .app-shell.colapsada .app-nav-top { justify-content: center; padding: 0; }
+  .app-shell.colapsada .app-nav-top { padding: 0 5px; gap: 0; }
   .app-shell.colapsada .app-nav-logo,
-  .app-shell.colapsada .nav-label { display: none; }
+  .app-shell.colapsada .app-nav .nav-label { opacity: 0; max-width: 0; }
   .app-shell.colapsada .app-nav-toggle svg { transform: rotate(180deg); }
-  .app-shell.colapsada .app-nav-links button { justify-content: center; padding: 10px; }
+  .app-shell.colapsada .app-nav-links button { padding: 9px 8px; gap: 0; }
 
   .app-content {
     flex: 1;
@@ -1912,6 +1925,58 @@ ul:empty { display: none; }
     from { transform: translateY(10px) scale(0.98); opacity: 0; }
     to { transform: translateY(0) scale(1); opacity: 1; }
   }
+}
+
+/* ========================================================= */
+/* ---------- animaciones ----------------------------------- */
+/* ========================================================= */
+
+/* Cambio de pantalla (Inicio / Categorías / Proveedores / elegir producto) */
+.app-content > section { animation: pantalla-entrar 0.26s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+@keyframes pantalla-entrar {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* El fondo oscuro de los modales aparece con un fundido, no de golpe */
+.modal-backdrop { animation: fundido-entrar 0.2s ease-out; }
+
+@keyframes fundido-entrar {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Respuesta al tocar: los botones se hunden un poco al presionarlos */
+button {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+button:active:not(:disabled) { transform: scale(0.97); }
+
+/* Pestañas de la barra de abajo (celular) y chips: el resaltado cambia suave */
+.app-nav-links button,
+.chip-check,
+.product-row,
+.movement-picker-lista button,
+.category-list li button,
+.supplier-list li button { transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease, padding 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), gap 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+/* Las filas de la lista no se hunden (sería mucho movimiento en una tabla) */
+.product-row:active:not(:disabled) { transform: none; }
+
+/* Aviso "✓ Guardado": sale con un fundido antes de desaparecer */
+.aviso.saliendo { animation: aviso-salir 0.25s ease-in forwards; }
+
+@keyframes aviso-salir {
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+/* Cambio de modo claro/oscuro: durante un instante todos los colores se deslizan
+   (la clase la pone useTema.js solo mientras dura el cambio). */
+html.tema-cambiando *,
+html.tema-cambiando *::before,
+html.tema-cambiando *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, fill 0.3s ease, stroke 0.3s ease !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
