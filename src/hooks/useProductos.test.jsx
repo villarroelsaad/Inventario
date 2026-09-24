@@ -58,6 +58,50 @@ describe('useProductos', () => {
     expect(result.current.productos).toEqual([{ id: 'A1', nombre: 'Yerba' }, { id: 'B1', nombre: 'Bomba' }])
   })
 
+  it('recargar vuelve a pedir los productos con los filtros actuales', async () => {
+    const { result } = renderHook(() => useProductos())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    act(() => result.current.setFiltros({ busqueda: 'yerba' }))
+    await waitFor(() => expect(listarProductos).toHaveBeenCalledTimes(2))
+
+    await act(async () => { await result.current.recargar() })
+
+    expect(listarProductos).toHaveBeenCalledTimes(3)
+    expect(listarProductos).toHaveBeenLastCalledWith({ busqueda: 'yerba' })
+  })
+
+  it('sin cargar la lista no consulta productos, ni al montar ni al guardar', async () => {
+    crearProducto.mockResolvedValue({ id: 'A2', nombre: 'Aceite' })
+    reemplazarProveedoresDeProducto.mockResolvedValue(undefined)
+    borrarProducto.mockResolvedValue(undefined)
+
+    const { result } = renderHook(() => useProductos({ cargarLista: false }))
+    expect(result.current.loading).toBe(false)
+
+    await act(async () => {
+      await result.current.crear({ id: 'A2', nombre: 'Aceite' }, [])
+      await result.current.borrar('A2')
+    })
+
+    expect(crearProducto).toHaveBeenCalled()
+    expect(borrarProducto).toHaveBeenCalledWith('A2')
+    expect(listarProductos).not.toHaveBeenCalled()
+  })
+
+  it('cuando se empieza a necesitar la lista, la carga con los filtros actuales', async () => {
+    const { result, rerender } = renderHook(({ cargarLista }) => useProductos({ cargarLista }), {
+      initialProps: { cargarLista: false }
+    })
+    act(() => result.current.setFiltros({ busqueda: 'yer' }))
+    expect(listarProductos).not.toHaveBeenCalled()
+
+    rerender({ cargarLista: true })
+
+    await waitFor(() => expect(result.current.productos).toEqual([{ id: 'A1', nombre: 'Yerba' }]))
+    expect(listarProductos).toHaveBeenCalledTimes(1)
+    expect(listarProductos).toHaveBeenCalledWith({ busqueda: 'yer' })
+  })
+
   it('carga los productos al montar, sin filtros', async () => {
     const { result } = renderHook(() => useProductos())
 

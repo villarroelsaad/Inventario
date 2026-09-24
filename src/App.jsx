@@ -20,9 +20,10 @@ import ModalHeader from './components/ModalHeader.jsx'
 import { avisar } from './lib/avisos.js'
 import { filasPorProveedor, precioDeFila } from './lib/filasPorProveedor.js'
 
+const VISTAS_MODAL = ['producto-detalle', 'producto-form', 'movimiento-form', 'escaneo', 'escaneo-elegir-proveedor']
+
 export default function App () {
   const { user, loading, logout } = useAuth()
-  const { productos, filtros, setFiltros, crear, actualizar, borrar } = useProductos()
   const { registrar: registrarMovimiento, error: movimientoError } = useMovimientos()
   const { temaEfectivo, alternarTema } = useTema()
 
@@ -35,6 +36,18 @@ export default function App () {
   const [filasEscaneadas, setFilasEscaneadas] = useState([])
   const [productoError, setProductoError] = useState(null)
   const [sidebarColapsada, setSidebarColapsada] = useState(false)
+  // Sube cada vez que cambian los datos (guardar, eliminar, movimiento) para que la lista se recargue
+  const [versionDatos, setVersionDatos] = useState(0)
+
+  const vistaModal = VISTAS_MODAL.includes(vista)
+  // Pantalla que queda detrás de un modal: se mantiene montada para no vaciarla ni recargarla al cerrar
+  const [vistaFondo, setVistaFondo] = useState(vista)
+  if (!vistaModal && vistaFondo !== vista) {
+    setVistaFondo(vista)
+  }
+  const pantalla = vistaModal ? vistaFondo : vista
+  // La lista de Inicio pide sus propios productos; esta copia solo hace falta al elegir producto para un movimiento
+  const { productos, filtros, setFiltros, crear, actualizar, borrar } = useProductos({ cargarLista: pantalla === 'movimiento-elegir-producto' })
 
   if (loading) {
     return null
@@ -90,6 +103,7 @@ export default function App () {
       } else {
         await crear(datos, proveedores, imagenFile, cantidadInicial)
       }
+      datosCambiaron()
       avisar(productoActivo ? 'Producto actualizado' : 'Producto guardado')
       irAInicio()
     } catch (err) {
@@ -99,6 +113,7 @@ export default function App () {
 
   async function handleEliminarProducto () {
     await borrar(productoActivo.id)
+    datosCambiaron()
     avisar('Producto eliminado')
     irAInicio()
   }
@@ -122,6 +137,7 @@ export default function App () {
   async function handleGuardarMovimiento (cantidad, motivo) {
     try {
       await registrarMovimiento({ productoId: productoActivo.id, tipo: tipoMovimiento, cantidad, motivo })
+      datosCambiaron()
       avisar(tipoMovimiento === 'entrada' ? 'Entrada registrada' : 'Salida registrada')
       if (movimientoDesdeDetalle) {
         const actualizado = await obtenerProductoPorId(productoActivo.id)
@@ -184,7 +200,9 @@ export default function App () {
     else if (vista === 'escaneo') cancelarEscaneo()
   }
 
-  const vistaModal = ['producto-detalle', 'producto-form', 'movimiento-form', 'escaneo', 'escaneo-elegir-proveedor'].includes(vista)
+  function datosCambiaron () {
+    setVersionDatos((v) => v + 1)
+  }
 
   return (
     <div className={sidebarColapsada ? 'app-shell colapsada' : 'app-shell'}>
@@ -202,15 +220,15 @@ export default function App () {
           </button>
         </div>
         <div className="app-nav-links">
-          <button type="button" className={vista === 'inicio' ? 'activo' : ''} onClick={irAInicio}>
+          <button type="button" className={pantalla === 'inicio' ? 'activo' : ''} onClick={irAInicio}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></svg>
             <span className="nav-label">Inicio</span>
           </button>
-          <button type="button" className={vista === 'categorias' ? 'activo' : ''} onClick={() => setVista('categorias')}>
+          <button type="button" className={pantalla === 'categorias' ? 'activo' : ''} onClick={() => setVista('categorias')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
             <span className="nav-label">Categorías</span>
           </button>
-          <button type="button" className={vista === 'proveedores' ? 'activo' : ''} onClick={() => setVista('proveedores')}>
+          <button type="button" className={pantalla === 'proveedores' ? 'activo' : ''} onClick={() => setVista('proveedores')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7h18l-1.5 11a2 2 0 0 1-2 1.8H6.5a2 2 0 0 1-2-1.8L3 7Z" /><path d="M8 7V5a4 4 0 0 1 8 0v2" /></svg>
             <span className="nav-label">Proveedores</span>
           </button>
@@ -233,19 +251,20 @@ export default function App () {
       </nav>
 
       <main className="app-content">
-        {vista === 'inicio' && (
+        {pantalla === 'inicio' && (
           <ProductList
             onSelect={abrirDetalle}
             onAdd={abrirFormularioNuevo}
             onScan={abrirEscaneoStandalone}
             onMovimiento={handleMovimiento}
+            version={versionDatos}
           />
         )}
 
-        {vista === 'categorias' && <CategoryList />}
-        {vista === 'proveedores' && <SupplierList />}
+        {pantalla === 'categorias' && <CategoryList />}
+        {pantalla === 'proveedores' && <SupplierList />}
 
-        {vista === 'movimiento-elegir-producto' && (
+        {pantalla === 'movimiento-elegir-producto' && (
           <section className="movement-picker">
             <button type="button" onClick={irAInicio} className="link-button">← Volver</button>
             <h1>{tipoMovimiento === 'entrada' ? 'Registrar entrada' : 'Registrar salida'}</h1>

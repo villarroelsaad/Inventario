@@ -9,10 +9,11 @@ import {
 import { reemplazarProveedoresDeProducto } from '../services/productoProveedor.js'
 import { registrarMovimiento } from '../services/movimientos.js'
 
-export function useProductos () {
+// cargarLista: false sirve para quien solo necesita crear/editar/borrar (sin pedir la lista a la base)
+export function useProductos ({ cargarLista = true } = {}) {
   const [productos, setProductos] = useState([])
   const [filtros, setFiltros] = useState({})
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(cargarLista)
   const [error, setError] = useState(null)
 
   // Si los filtros cambian rápido salen varias consultas a la vez; solo vale la
@@ -36,8 +37,13 @@ export function useProductos () {
   }, [])
 
   useEffect(() => {
-    cargar(filtros)
-  }, [cargar, filtros])
+    if (cargarLista) cargar(filtros)
+  }, [cargar, filtros, cargarLista])
+
+  // Después de guardar, solo se refresca la lista si alguien la está usando
+  const refrescar = useCallback(async () => {
+    if (cargarLista) await cargar(filtros)
+  }, [cargar, filtros, cargarLista])
 
   const crear = useCallback(async (datos, proveedores = [], imagenFile = null, cantidadInicial = 0) => {
     let nuevo = await crearProducto(datos)
@@ -54,9 +60,9 @@ export function useProductos () {
         motivo: 'Alta inicial'
       })
     }
-    await cargar(filtros)
+    await refrescar()
     return nuevo
-  }, [cargar, filtros])
+  }, [refrescar])
 
   const actualizar = useCallback(async (id, cambios, proveedores = [], imagenFile = null) => {
     let actualizado = await actualizarProducto(id, cambios)
@@ -65,14 +71,16 @@ export function useProductos () {
       const url = await subirImagenProducto(id, imagenFile)
       actualizado = await actualizarProducto(id, { imagen_url: url })
     }
-    await cargar(filtros)
+    await refrescar()
     return actualizado
-  }, [cargar, filtros])
+  }, [refrescar])
 
   const borrar = useCallback(async (id) => {
     await borrarProducto(id)
-    await cargar(filtros)
-  }, [cargar, filtros])
+    await refrescar()
+  }, [refrescar])
 
-  return { productos, filtros, setFiltros, loading, error, crear, actualizar, borrar }
+  const recargar = useCallback(() => cargar(filtros), [cargar, filtros])
+
+  return { productos, filtros, setFiltros, loading, error, crear, actualizar, borrar, recargar }
 }

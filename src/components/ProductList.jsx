@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useProductos } from '../hooks/useProductos.js'
 import { useCategorias } from '../hooks/useCategorias.js'
 import { useProveedores } from '../hooks/useProveedores.js'
@@ -7,10 +8,19 @@ import { filasPorProveedor, precioDeFila, costoDeFila } from '../lib/filasPorPro
 import { calcularMargen } from '../lib/margen.js'
 import Icono from './Icono.jsx'
 
-export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) {
-  const { productos, filtros, setFiltros, loading, error } = useProductos()
+export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento, version = 0 }) {
+  const { productos, filtros, setFiltros, loading, error, recargar } = useProductos()
   const { categorias } = useCategorias()
   const { proveedores } = useProveedores()
+
+  // La lista queda montada detrás de los modales; solo se recarga cuando App avisa que
+  // algo cambió (guardar, eliminar, movimiento), no cada vez que se cierra un modal.
+  const versionCargada = useRef(version)
+  useEffect(() => {
+    if (version === versionCargada.current) return
+    versionCargada.current = version
+    recargar?.()
+  }, [version, recargar])
 
   const conStockBajo = productos.filter((p) => p.stock < p.stock_minimo)
   const valorEnStock = productos.reduce((total, p) => {
@@ -172,7 +182,7 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
         </select>
       </div>
 
-      {loading && <p className="cargando">Cargando...</p>}
+      {loading && productos.length === 0 && <p className="cargando">Cargando...</p>}
       {error && <p className="login-error">{error}</p>}
       {!loading && !error && filas.length === 0 && (
         <p className="vacio">

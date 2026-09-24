@@ -227,6 +227,34 @@ describe('ProductList', () => {
     expect(screen.getByText('Valor en stock').closest('.stat-tile')).toHaveTextContent('Ganancia posible $40')
   })
 
+  it('mientras recarga, sigue mostrando los productos que ya tenía sin el aviso de cargando', () => {
+    useProductosMock.mockReturnValue({ productos, filtros: {}, setFiltros, loading: true, error: null })
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    expect(screen.getByText('Yerba')).toBeInTheDocument()
+    expect(screen.queryByText('Cargando...')).not.toBeInTheDocument()
+  })
+
+  it('en la carga inicial, sin productos todavía, muestra el aviso de cargando', () => {
+    useProductosMock.mockReturnValue({ productos: [], filtros: {}, setFiltros, loading: true, error: null })
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    expect(screen.getByText('Cargando...')).toBeInTheDocument()
+  })
+
+  it('cuando cambia la versión de los datos, recarga la lista (una vez por cambio)', () => {
+    const recargar = vi.fn()
+    useProductosMock.mockReturnValue({ productos, filtros: {}, setFiltros, loading: false, error: null, recargar })
+    const { rerender } = render(<ProductList onSelect={() => {}} onAdd={() => {}} version={0} />)
+    expect(recargar).not.toHaveBeenCalled()
+
+    rerender(<ProductList onSelect={() => {}} onAdd={() => {}} version={0} />)
+    expect(recargar).not.toHaveBeenCalled()
+
+    rerender(<ProductList onSelect={() => {}} onAdd={() => {}} version={1} />)
+    expect(recargar).toHaveBeenCalledTimes(1)
+  })
+
   it('sin productos, invita a cargar el primero', () => {
     useProductosMock.mockReturnValue({ productos: [], filtros: {}, setFiltros, loading: false, error: null })
     render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
