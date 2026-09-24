@@ -109,7 +109,7 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
                     {m.tipo === 'entrada' ? '+' : '-'}{m.cantidad}
                   </span>
                   <span className="movimiento-motivo">{m.motivo || (m.tipo === 'entrada' ? 'Entrada' : 'Salida')}</span>
-                  <span className="movimiento-fecha">{new Date(m.fecha).toLocaleDateString()}</span>
+                  <span className="movimiento-fecha">{new Date(m.fecha).toLocaleDateString('es-AR')}</span>
                 </li>
               ))}
             </ol>

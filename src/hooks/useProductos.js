@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   listarProductos,
   crearProducto,
@@ -15,15 +15,23 @@ export function useProductos () {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Si los filtros cambian rápido salen varias consultas a la vez; solo vale la
+  // respuesta de la última, así una respuesta vieja que llega tarde no pisa la nueva.
+  const ultimaConsulta = useRef(0)
+
   const cargar = useCallback(async (filtrosActuales) => {
+    const consulta = ++ultimaConsulta.current
     setLoading(true)
     try {
-      setProductos(await listarProductos(filtrosActuales))
+      const datos = await listarProductos(filtrosActuales)
+      if (consulta !== ultimaConsulta.current) return
+      setProductos(datos)
       setError(null)
     } catch (err) {
+      if (consulta !== ultimaConsulta.current) return
       setError(err.message)
     } finally {
-      setLoading(false)
+      if (consulta === ultimaConsulta.current) setLoading(false)
     }
   }, [])
 

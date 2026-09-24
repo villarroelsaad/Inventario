@@ -12,12 +12,13 @@ export default function MovementForm ({ producto, tipo, error, onSave, onCancel 
   const superaStock = tipo === 'salida' && cantidadNumero > producto.stock
   const stockResultante = esEntrada ? producto.stock + cantidadNumero : producto.stock - cantidadNumero
 
+  // Con la función de actualización, dos toques muy seguidos suman 2 y no 1.
   function sumar () {
-    setCantidad(String((cantidadNumero || 0) + 1))
+    setCantidad((actual) => String((Number(actual) || 0) + 1))
   }
 
   function restar () {
-    if (cantidadNumero > 1) setCantidad(String(cantidadNumero - 1))
+    setCantidad((actual) => (Number(actual) > 1 ? String(Number(actual) - 1) : actual))
   }
 
   function handleSubmit (event) {

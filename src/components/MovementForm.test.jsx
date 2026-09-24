@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MovementForm from './MovementForm.jsx'
 
@@ -70,6 +70,18 @@ describe('MovementForm', () => {
     await user.click(screen.getByRole('button', { name: /cancelar/i }))
 
     expect(onCancel).toHaveBeenCalled()
+  })
+
+  it('dos toques muy seguidos en sumar cuentan los dos', () => {
+    render(<MovementForm producto={producto} tipo="entrada" onSave={() => {}} onCancel={() => {}} />)
+    const sumar = screen.getByRole('button', { name: /sumar uno/i })
+
+    act(() => {
+      sumar.click()
+      sumar.click()
+    })
+
+    expect(screen.getByLabelText(/cantidad/i)).toHaveValue(2)
   })
 
   it('los botones de sumar y restar cambian la cantidad', async () => {

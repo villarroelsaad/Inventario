@@ -39,6 +39,25 @@ beforeEach(() => {
 })
 
 describe('useProductos', () => {
+  it('si una consulta vieja responde tarde, no pisa el resultado de la más nueva', async () => {
+    let resolverVieja
+    listarProductos
+      .mockResolvedValueOnce([{ id: 'A1', nombre: 'Yerba' }])
+      .mockImplementationOnce(() => new Promise((resolve) => { resolverVieja = resolve }))
+      .mockResolvedValueOnce([{ id: 'A1', nombre: 'Yerba' }, { id: 'B1', nombre: 'Bomba' }])
+
+    const { result } = renderHook(() => useProductos())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    act(() => result.current.setFiltros({ proveedorId: 'p2' }))
+    act(() => result.current.setFiltros({}))
+    await waitFor(() => expect(result.current.productos).toHaveLength(2))
+
+    await act(async () => resolverVieja([{ id: 'E2E', nombre: 'Solo del proveedor' }]))
+
+    expect(result.current.productos).toEqual([{ id: 'A1', nombre: 'Yerba' }, { id: 'B1', nombre: 'Bomba' }])
+  })
+
   it('carga los productos al montar, sin filtros', async () => {
     const { result } = renderHook(() => useProductos())
 
