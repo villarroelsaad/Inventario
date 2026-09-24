@@ -38,8 +38,11 @@ export default function SupplierList () {
         </button>
       </div>
 
-      {loading && <p>Cargando...</p>}
+      {loading && <p className="cargando">Cargando...</p>}
       {error && <p className="login-error">{error}</p>}
+      {!loading && !error && proveedores.length === 0 && (
+        <p className="vacio">Todavía no hay proveedores. Tocá “Agregar proveedor” para sumar el primero.</p>
+      )}
       <ul>
         {proveedores.map((proveedor) => (
           <li key={proveedor.id}>

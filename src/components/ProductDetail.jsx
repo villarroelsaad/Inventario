@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { listarProveedoresDeProducto } from '../services/productoProveedor.js'
 import { listarMovimientosPorProducto } from '../services/movimientos.js'
+import { estadoStock } from '../lib/estadoStock.js'
+import Icono from './Icono.jsx'
+
+function pesos (valor) {
+  return `$${Number(valor ?? 0).toLocaleString('es-AR')}`
+}
 
 export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onMovimiento }) {
   const [proveedores, setProveedores] = useState([])
@@ -29,60 +35,83 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
     }
   }
 
+  const estado = estadoStock(producto)
+
   return (
-    <section className="product-detail">
-      <button type="button" onClick={onBack} className="link-button">← Volver</button>
-
-      {producto.imagen_url && <img src={producto.imagen_url} alt={producto.nombre} className="product-detail-imagen" />}
-
-      <h1>{producto.nombre}</h1>
-      <p className="product-detail-codigo">{producto.id}</p>
-
-      <dl className="product-detail-datos">
-        <dt>Precio de venta</dt>
-        <dd>${producto.precio_venta}</dd>
-        <dt>Costo</dt>
-        <dd>${producto.costo}</dd>
-        <dt>Stock</dt>
-        <dd>{producto.stock}</dd>
-        <dt>Stock mínimo</dt>
-        <dd>{producto.stock_minimo}</dd>
-      </dl>
-
-      {proveedores.length > 0 && (
-        <div className="product-detail-proveedores">
-          <h2>Proveedores</h2>
-          <ul>
-            {proveedores.map((p) => <li key={p.id} className="chip">{p.nombre}</li>)}
-          </ul>
+    <section className="product-detail hoja">
+      <div className="hoja-cuerpo">
+        <div className="detalle-hero">
+          {producto.imagen_url
+            ? <img src={producto.imagen_url} alt={producto.nombre} className="product-detail-imagen" />
+            : <span className="product-thumb detalle-avatar" aria-hidden="true">{producto.nombre.charAt(0).toUpperCase()}</span>}
+          <div className="detalle-hero-texto">
+            <h1>{producto.nombre}</h1>
+            <p className="product-detail-codigo">{producto.id}</p>
+            <span className={`estado estado-${estado.clave}`}>{estado.texto}</span>
+          </div>
+          <button type="button" onClick={onBack} className="hoja-cerrar" aria-label="Volver">
+            <Icono nombre="cerrar" />
+          </button>
         </div>
-      )}
 
-      <div className="product-actions">
-        <button type="button" onClick={() => onMovimiento('entrada')}>+ Entrada</button>
-        <button type="button" onClick={() => onMovimiento('salida')}>− Salida</button>
+        <dl className="product-detail-datos">
+          <div className="dato">
+            <dt>Precio de venta</dt>
+            <dd>{pesos(producto.precio_venta)}</dd>
+          </div>
+          <div className="dato">
+            <dt>Costo</dt>
+            <dd>{pesos(producto.costo)}</dd>
+          </div>
+          <div className={`dato dato-stock estado-${estado.clave}`}>
+            <dt>Stock</dt>
+            <dd>{producto.stock}</dd>
+          </div>
+          <div className="dato">
+            <dt>Stock mínimo</dt>
+            <dd>{producto.stock_minimo}</dd>
+          </div>
+        </dl>
+
+        <div className="product-actions">
+          <button type="button" className="accion-entrada" onClick={() => onMovimiento('entrada')}>+ Entrada</button>
+          <button type="button" className="accion-salida" onClick={() => onMovimiento('salida')}>− Salida</button>
+        </div>
+
+        {proveedores.length > 0 && (
+          <div className="product-detail-proveedores">
+            <h2>Proveedores</h2>
+            <ul>
+              {proveedores.map((p) => <li key={p.id} className="chip">{p.nombre}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {movimientos.length > 0 && (
+          <div className="product-detail-historial">
+            <h2>Historial de movimientos</h2>
+            <ol className="timeline">
+              {movimientos.map((m) => (
+                <li key={m.id} className={m.tipo === 'entrada' ? 'timeline-item es-entrada' : 'timeline-item es-salida'}>
+                  <span className="timeline-punto" aria-hidden="true" />
+                  <span className={m.tipo === 'entrada' ? 'movimiento-entrada' : 'movimiento-salida'}>
+                    {m.tipo === 'entrada' ? '+' : '-'}{m.cantidad}
+                  </span>
+                  <span className="movimiento-motivo">{m.motivo || (m.tipo === 'entrada' ? 'Entrada' : 'Salida')}</span>
+                  <span className="movimiento-fecha">{new Date(m.fecha).toLocaleDateString()}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
 
-      {movimientos.length > 0 && (
-        <div className="product-detail-historial">
-          <h2>Historial de movimientos</h2>
-          <ul>
-            {movimientos.map((m) => (
-              <li key={m.id}>
-                <span className={m.tipo === 'entrada' ? 'movimiento-entrada' : 'movimiento-salida'}>
-                  {m.tipo === 'entrada' ? '+' : '-'}{m.cantidad}
-                </span>
-                <span className="movimiento-fecha">{new Date(m.fecha).toLocaleDateString()}</span>
-                {m.motivo && <span className="movimiento-motivo">{m.motivo}</span>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       <div className="form-actions">
-        <button type="button" onClick={handleDelete}>Eliminar</button>
-        <button type="button" onClick={onEdit}>Editar</button>
+        <button type="button" onClick={handleDelete} className="btn-peligro">Eliminar</button>
+        <button type="button" onClick={onEdit}>
+          <Icono nombre="editar" />
+          Editar
+        </button>
       </div>
     </section>
   )

@@ -118,4 +118,31 @@ describe('ProductList', () => {
     expect(generarCsvProductos).toHaveBeenCalledWith(productos, [{ id: 'c1', nombre: 'Bebidas' }])
     expect(descargarCsv).toHaveBeenCalledWith(expect.stringMatching(/^productos.*\.csv$/), 'Código,Nombre\nA1,Yerba')
   })
+
+  it('marca el estado de stock de cada producto (normal, bajo, sin stock)', () => {
+    useProductosMock.mockReturnValue({
+      productos: [
+        { id: 'A1', nombre: 'Yerba', stock: 24, stock_minimo: 5, precio_venta: 3200 },
+        { id: 'A2', nombre: 'Aceite', stock: 2, stock_minimo: 5, precio_venta: 4100 },
+        { id: 'A3', nombre: 'Arroz', stock: 0, stock_minimo: 5, precio_venta: 900 }
+      ],
+      filtros: {},
+      setFiltros,
+      loading: false,
+      error: null
+    })
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    expect(screen.getByText('Yerba').closest('li')).toHaveTextContent('Normal')
+    expect(screen.getByText('Aceite').closest('li')).toHaveTextContent('Bajo')
+    expect(screen.getByText('Arroz').closest('li')).toHaveTextContent('Sin stock')
+  })
+
+  it('sin productos, invita a cargar el primero', () => {
+    useProductosMock.mockReturnValue({ productos: [], filtros: {}, setFiltros, loading: false, error: null })
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    expect(screen.getByText(/todavía no hay productos/i)).toBeInTheDocument()
+  })
 })
+

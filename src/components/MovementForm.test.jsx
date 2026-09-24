@@ -71,4 +71,19 @@ describe('MovementForm', () => {
 
     expect(onCancel).toHaveBeenCalled()
   })
+
+  it('los botones de sumar y restar cambian la cantidad', async () => {
+    const onSave = vi.fn()
+    const user = userEvent.setup()
+    render(<MovementForm producto={producto} tipo="entrada" onSave={onSave} onCancel={() => {}} />)
+
+    await user.click(screen.getByRole('button', { name: /sumar uno/i }))
+    await user.click(screen.getByRole('button', { name: /sumar uno/i }))
+    await user.click(screen.getByRole('button', { name: /sumar uno/i }))
+    await user.click(screen.getByRole('button', { name: /restar uno/i }))
+
+    expect(screen.getByLabelText(/cantidad/i)).toHaveValue(2)
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    expect(onSave).toHaveBeenCalledWith(2, null)
+  })
 })

@@ -38,8 +38,11 @@ export default function CategoryList () {
         </button>
       </div>
 
-      {loading && <p>Cargando...</p>}
+      {loading && <p className="cargando">Cargando...</p>}
       {error && <p className="login-error">{error}</p>}
+      {!loading && !error && categorias.length === 0 && (
+        <p className="vacio">Todavía no hay categorías. Tocá “Agregar categoría” para sumar la primera.</p>
+      )}
       <ul>
         {categorias.map((categoria) => (
           <li key={categoria.id}>

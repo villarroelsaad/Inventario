@@ -5,6 +5,7 @@ import { useMovimientos } from './hooks/useMovimientos.js'
 import { useTema } from './hooks/useTema.js'
 import { listarProveedoresDeProducto } from './services/productoProveedor.js'
 import { obtenerProductoPorId } from './services/productos.js'
+import { estadoStock } from './lib/estadoStock.js'
 import Login from './components/Login.jsx'
 import CategoryList from './components/CategoryList.jsx'
 import SupplierList from './components/SupplierList.jsx'
@@ -160,17 +161,6 @@ export default function App () {
 
   return (
     <div className={sidebarColapsada ? 'app-shell colapsada' : 'app-shell'}>
-      <button
-        type="button"
-        className="theme-toggle"
-        onClick={alternarTema}
-        aria-label={temaEfectivo === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-      >
-        {temaEfectivo === 'dark'
-          ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" /></svg>
-          : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>}
-      </button>
-
       <nav className="app-nav">
         <div className="app-nav-top">
           <div className="app-nav-logo">Registro</div>
@@ -178,7 +168,8 @@ export default function App () {
             type="button"
             className="app-nav-toggle"
             onClick={() => setSidebarColapsada((actual) => !actual)}
-            aria-label="Contraer menú"
+            aria-label={sidebarColapsada ? 'Expandir menú' : 'Contraer menú'}
+            aria-expanded={!sidebarColapsada}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m14 6-6 6 6 6" /></svg>
           </button>
@@ -195,6 +186,17 @@ export default function App () {
           <button type="button" className={vista === 'proveedores' ? 'activo' : ''} onClick={() => setVista('proveedores')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7h18l-1.5 11a2 2 0 0 1-2 1.8H6.5a2 2 0 0 1-2-1.8L3 7Z" /><path d="M8 7V5a4 4 0 0 1 8 0v2" /></svg>
             <span className="nav-label">Proveedores</span>
+          </button>
+          <button
+            type="button"
+            className="nav-tema"
+            onClick={alternarTema}
+            aria-label={temaEfectivo === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          >
+            {temaEfectivo === 'dark'
+              ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+              : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>}
+            <span className="nav-label">{temaEfectivo === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>
           </button>
         </div>
       </nav>
@@ -238,11 +240,16 @@ export default function App () {
                   <button type="button" onClick={() => elegirProductoParaMovimiento(p)}>
                     <span className="product-thumb">{p.nombre.charAt(0).toUpperCase()}</span>
                     <span className="product-nombre">{p.nombre}</span>
-                    <span className={p.stock < p.stock_minimo ? 'badge bajo' : 'badge ok'}>{p.stock}</span>
+                    <span className={`badge ${estadoStock(p).clave}`}>{p.stock}</span>
                   </button>
                 </li>
               ))}
             </ul>
+            {productos.length === 0 && (
+              <p className="vacio">
+                {filtros.busqueda ? 'Ningún producto coincide con esa búsqueda.' : 'Todavía no hay productos cargados.'}
+              </p>
+            )}
           </section>
         )}
       </main>
