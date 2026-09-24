@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { listarProveedoresDeProducto } from '../services/productoProveedor.js'
 import { listarMovimientosPorProducto } from '../services/movimientos.js'
 import { estadoStock } from '../lib/estadoStock.js'
+import { precioDeFila, costoDeFila } from '../lib/filasPorProveedor.js'
 import Icono from './Icono.jsx'
 
 function pesos (valor) {
@@ -46,7 +47,9 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
             : <span className="product-thumb detalle-avatar" aria-hidden="true">{producto.nombre.charAt(0).toUpperCase()}</span>}
           <div className="detalle-hero-texto">
             <h1>{producto.nombre}</h1>
-            <p className="product-detail-codigo">{producto.id}</p>
+            <p className="product-detail-codigo">
+              {producto.id}{producto.proveedor && <> · de {producto.proveedor.nombre}</>}
+            </p>
             <span className={`estado estado-${estado.clave}`}>{estado.texto}</span>
           </div>
           <button type="button" onClick={onBack} className="hoja-cerrar" aria-label="Volver">
@@ -57,11 +60,11 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
         <dl className="product-detail-datos">
           <div className="dato">
             <dt>Precio de venta</dt>
-            <dd>{pesos(producto.precio_venta)}</dd>
+            <dd>{pesos(precioDeFila(producto))}</dd>
           </div>
           <div className="dato">
             <dt>Costo</dt>
-            <dd>{pesos(producto.costo)}</dd>
+            <dd>{pesos(costoDeFila(producto))}</dd>
           </div>
           <div className={`dato dato-stock estado-${estado.clave}`}>
             <dt>Stock</dt>
@@ -82,7 +85,7 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
           <div className="product-detail-proveedores">
             <h2>Proveedores</h2>
             <ul>
-              {proveedores.map((p) => <li key={p.id} className="chip">{p.nombre}</li>)}
+              {proveedores.map((p) => <li key={p.id} className="chip">{p.nombre}{p.precio_venta != null && ` · ${pesos(p.precio_venta)}`}</li>)}
             </ul>
           </div>
         )}

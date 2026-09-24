@@ -95,7 +95,7 @@ describe('ProductList', () => {
 
     await user.click(screen.getByText('Yerba'))
 
-    expect(onSelect).toHaveBeenCalledWith(productos[0])
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'A1', nombre: 'Yerba', proveedor: null }))
   })
 
   it('tocar agregar producto llama a onAdd', async () => {
@@ -115,7 +115,10 @@ describe('ProductList', () => {
 
     await user.click(screen.getByRole('button', { name: /exportar/i }))
 
-    expect(generarCsvProductos).toHaveBeenCalledWith(productos, [{ id: 'c1', nombre: 'Bebidas' }])
+    expect(generarCsvProductos).toHaveBeenCalledWith(
+      [expect.objectContaining({ id: 'A1' }), expect.objectContaining({ id: 'A2' })],
+      [{ id: 'c1', nombre: 'Bebidas' }]
+    )
     expect(descargarCsv).toHaveBeenCalledWith(expect.stringMatching(/^productos.*\.csv$/), 'Código,Nombre\nA1,Yerba')
   })
 
@@ -136,6 +139,55 @@ describe('ProductList', () => {
     expect(screen.getByText('Yerba').closest('li')).toHaveTextContent('Normal')
     expect(screen.getByText('Aceite').closest('li')).toHaveTextContent('Bajo')
     expect(screen.getByText('Arroz').closest('li')).toHaveTextContent('Sin stock')
+  })
+
+  it('filtra por rango de precio con los campos desde y hasta', async () => {
+    const user = userEvent.setup()
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    await user.type(screen.getByLabelText('Precio desde'), '5')
+    expect(setFiltros).toHaveBeenLastCalledWith({ precioMin: 5 })
+
+    await user.type(screen.getByLabelText('Precio hasta'), '9')
+    expect(setFiltros).toHaveBeenLastCalledWith({ precioMax: 9 })
+  })
+
+  it('borrar el precio saca ese filtro', async () => {
+    useProductosMock.mockReturnValue({ productos, filtros: { precioMin: 5 }, setFiltros, loading: false, error: null })
+    const user = userEvent.setup()
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    await user.clear(screen.getByLabelText('Precio desde'))
+    expect(setFiltros).toHaveBeenLastCalledWith({ precioMin: undefined })
+  })
+
+  it('un producto con dos proveedores aparece en dos filas, cada una con el precio de su proveedor', () => {
+    useProductosMock.mockReturnValue({
+      productos: [{
+        id: 'A1',
+        nombre: 'Yerba',
+        stock: 24,
+        stock_minimo: 5,
+        precio_venta: 3000,
+        proveedores: [
+          { id: 'p1', nombre: 'Distribuidora Sur', precio_venta: 3200, costo: 2000 },
+          { id: 'p2', nombre: 'Molinos', precio_venta: 3500, costo: 2100 }
+        ]
+      }],
+      filtros: {},
+      setFiltros,
+      loading: false,
+      error: null
+    })
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    const filas = screen.getAllByText('Yerba').map((el) => el.closest('li'))
+    expect(filas).toHaveLength(2)
+    expect(filas[0]).toHaveTextContent('Distribuidora Sur')
+    expect(filas[0]).toHaveTextContent('$3.200')
+    expect(filas[1]).toHaveTextContent('Molinos')
+    expect(filas[1]).toHaveTextContent('$3.500')
+    expect(screen.getByText('1 producto en total')).toBeInTheDocument()
   })
 
   it('sin productos, invita a cargar el primero', () => {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { avisar } from '../lib/avisos.js'
 import { useProveedores } from '../hooks/useProveedores.js'
 import SupplierForm from './SupplierForm.jsx'
 
@@ -15,6 +16,7 @@ export default function SupplierList () {
       } else {
         await crear(datos)
       }
+      avisar('Proveedor guardado')
       setEditando(null)
     } finally {
       setGuardando(false)
@@ -25,6 +27,7 @@ export default function SupplierList () {
     const confirmado = window.confirm(`¿Seguro que querés eliminar ${proveedor.nombre}? No se puede deshacer.`)
     if (confirmado) {
       await borrar(proveedor.id)
+      avisar('Proveedor eliminado')
     }
   }
 

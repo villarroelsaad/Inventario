@@ -45,18 +45,39 @@ beforeEach(() => {
 })
 
 describe('listarProductos', () => {
-  it('trae todos los productos sin filtros, ordenados por nombre', async () => {
-    const builder = makeQueryBuilder({ data: [{ id: 'A1', nombre: 'Yerba' }], error: null })
+  it('trae todos los productos sin filtros, ordenados por nombre, con sus proveedores', async () => {
+    const builder = makeQueryBuilder({
+      data: [{
+        id: 'A1',
+        nombre: 'Yerba',
+        producto_proveedor: [{ proveedor_id: 'p1', precio_venta: 3200, costo: 2000, proveedores: { nombre: 'Distribuidora Sur' } }]
+      }],
+      error: null
+    })
     from.mockReturnValue(builder)
 
     const productos = await listarProductos({})
 
     expect(from).toHaveBeenCalledWith('productos')
+    expect(builder.select).toHaveBeenCalledWith('*, producto_proveedor(proveedor_id, precio_venta, costo, proveedores(nombre))')
     expect(builder.order).toHaveBeenCalledWith('nombre')
-    expect(productos).toEqual([{ id: 'A1', nombre: 'Yerba' }])
+    expect(productos).toEqual([{
+      id: 'A1',
+      nombre: 'Yerba',
+      proveedores: [{ id: 'p1', nombre: 'Distribuidora Sur', precio_venta: 3200, costo: 2000 }]
+    }])
   })
 
-  it('aplica busqueda de texto, categoria y rango de precio', async () => {
+  it('un producto sin proveedores queda con la lista vacia', async () => {
+    const builder = makeQueryBuilder({ data: [{ id: 'A1', nombre: 'Yerba', producto_proveedor: [] }], error: null })
+    from.mockReturnValue(builder)
+
+    const productos = await listarProductos({})
+
+    expect(productos).toEqual([{ id: 'A1', nombre: 'Yerba', proveedores: [] }])
+  })
+
+  it('aplica busqueda de texto y categoria en la base; el rango de precio se aplica por fila, no en la consulta', async () => {
     const builder = makeQueryBuilder({ data: [], error: null })
     from.mockReturnValue(builder)
 
@@ -65,28 +86,28 @@ describe('listarProductos', () => {
       categoriaId: 'cat-1',
       precioMin: 100,
       precioMax: 500,
-      orden: 'precio'
+      orden: 'cantidad'
     })
 
     expect(builder.ilike).toHaveBeenCalledWith('nombre', '%yerba%')
     expect(builder.eq).toHaveBeenCalledWith('categoria_id', 'cat-1')
-    expect(builder.gte).toHaveBeenCalledWith('precio_venta', 100)
-    expect(builder.lte).toHaveBeenCalledWith('precio_venta', 500)
-    expect(builder.order).toHaveBeenCalledWith('precio_venta')
+    expect(builder.gte).not.toHaveBeenCalled()
+    expect(builder.lte).not.toHaveBeenCalled()
+    expect(builder.order).toHaveBeenCalledWith('stock')
   })
 
-  it('filtra por proveedor via join y limpia el campo embebido', async () => {
+  it('filtra por proveedor via join y solo trae ese proveedor en cada producto', async () => {
     const builder = makeQueryBuilder({
-      data: [{ id: 'A1', nombre: 'Yerba', producto_proveedor: [{ proveedor_id: 'p1' }] }],
+      data: [{ id: 'A1', nombre: 'Yerba', producto_proveedor: [{ proveedor_id: 'p1', precio_venta: null, costo: null, proveedores: { nombre: 'Distribuidora Sur' } }] }],
       error: null
     })
     from.mockReturnValue(builder)
 
     const productos = await listarProductos({ proveedorId: 'p1' })
 
-    expect(builder.select).toHaveBeenCalledWith('*, producto_proveedor!inner(proveedor_id)')
+    expect(builder.select).toHaveBeenCalledWith('*, producto_proveedor!inner(proveedor_id, precio_venta, costo, proveedores(nombre))')
     expect(builder.eq).toHaveBeenCalledWith('producto_proveedor.proveedor_id', 'p1')
-    expect(productos).toEqual([{ id: 'A1', nombre: 'Yerba' }])
+    expect(productos[0].proveedores).toEqual([{ id: 'p1', nombre: 'Distribuidora Sur', precio_venta: null, costo: null }])
   })
 })
 

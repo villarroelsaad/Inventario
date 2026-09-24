@@ -3,6 +3,7 @@ import { useCategorias } from '../hooks/useCategorias.js'
 import { useProveedores } from '../hooks/useProveedores.js'
 import { generarCsvProductos, descargarCsv } from '../services/exportCsv.js'
 import { estadoStock } from '../lib/estadoStock.js'
+import { filasPorProveedor, precioDeFila } from '../lib/filasPorProveedor.js'
 import Icono from './Icono.jsx'
 
 export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) {
@@ -11,7 +12,11 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
   const { proveedores } = useProveedores()
 
   const conStockBajo = productos.filter((p) => p.stock < p.stock_minimo)
-  const valorEnStock = productos.reduce((total, p) => total + (p.precio_venta ?? 0) * p.stock, 0)
+  const valorEnStock = productos.reduce((total, p) => {
+    const precio = p.precio_venta ?? p.proveedores?.[0]?.precio_venta ?? 0
+    return total + precio * p.stock
+  }, 0)
+  const filas = filasPorProveedor(productos, filtros)
 
   const nombreCategoria = Object.fromEntries(categorias.map((c) => [c.id, c.nombre]))
 
@@ -19,8 +24,12 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
     setFiltros({ ...filtros, [campo]: valor || undefined })
   }
 
+  function actualizarPrecio (campo, texto) {
+    setFiltros({ ...filtros, [campo]: texto === '' ? undefined : Number(texto) })
+  }
+
   function handleExportar () {
-    const csv = generarCsvProductos(productos, categorias)
+    const csv = generarCsvProductos(filas, categorias)
     const fecha = new Date().toISOString().slice(0, 10)
     descargarCsv(`productos-${fecha}.csv`, csv)
   }
@@ -115,6 +124,32 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
           ))}
         </select>
 
+        <div className="filtro-precio">
+          <span aria-hidden="true">$</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            aria-label="Precio desde"
+            placeholder="Desde"
+            value={filtros.precioMin ?? ''}
+            onChange={(e) => actualizarPrecio('precioMin', e.target.value)}
+          />
+        </div>
+
+        <div className="filtro-precio">
+          <span aria-hidden="true">$</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            aria-label="Precio hasta"
+            placeholder="Hasta"
+            value={filtros.precioMax ?? ''}
+            onChange={(e) => actualizarPrecio('precioMax', e.target.value)}
+          />
+        </div>
+
         <select
           aria-label="Ordenar por"
           value={filtros.orden ?? 'nombre'}
@@ -129,15 +164,15 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
 
       {loading && <p className="cargando">Cargando...</p>}
       {error && <p className="login-error">{error}</p>}
-      {!loading && !error && productos.length === 0 && (
+      {!loading && !error && filas.length === 0 && (
         <p className="vacio">
-          {filtros.busqueda || filtros.categoriaId || filtros.proveedorId
+          {filtros.busqueda || filtros.categoriaId || filtros.proveedorId || filtros.precioMin != null || filtros.precioMax != null
             ? 'Ningún producto coincide con la búsqueda o los filtros elegidos.'
             : 'Todavía no hay productos. Tocá “Agregar producto” para cargar el primero.'}
         </p>
       )}
 
-      {productos.length > 0 && (
+      {filas.length > 0 && (
         <div className="tabla-cabecera" aria-hidden="true">
           <span>Producto</span>
           <span>Precio</span>
@@ -147,20 +182,21 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
       )}
 
       <ul className="tabla-productos">
-        {productos.map((producto) => {
+        {filas.map((producto) => {
           const estado = estadoStock(producto)
+          const meta = [nombreCategoria[producto.categoria_id] ?? 'Sin categoría', producto.proveedor?.nombre].filter(Boolean).join(' · ')
           return (
             <li
-              key={producto.id}
+              key={producto.clave}
               className={producto.stock < producto.stock_minimo ? 'stock-bajo' : 'stock-ok'}
             >
               <button type="button" onClick={() => onSelect(producto)} className="product-row">
                 <span className="product-thumb">{producto.nombre.charAt(0).toUpperCase()}</span>
                 <span className="product-info">
                   <span className="product-nombre">{producto.nombre}</span>
-                  <span className="product-meta">{nombreCategoria[producto.categoria_id] ?? 'Sin categoría'}</span>
+                  <span className="product-meta">{meta}</span>
                 </span>
-                <span className="product-precio">${Number(producto.precio_venta ?? 0).toLocaleString('es-AR')}</span>
+                <span className="product-precio">${Number(precioDeFila(producto) ?? 0).toLocaleString('es-AR')}</span>
                 <span className={`badge ${estado.clave}`}>{producto.stock}</span>
                 <span className={`estado estado-${estado.clave}`}>{estado.texto}</span>
               </button>

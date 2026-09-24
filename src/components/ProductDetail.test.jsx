@@ -45,6 +45,17 @@ describe('ProductDetail', () => {
     expect(listarProveedoresDeProducto).toHaveBeenCalledWith('A1')
   })
 
+  it('abierto desde la fila de un proveedor, muestra el precio y costo de ese proveedor', async () => {
+    listarProveedoresDeProducto.mockResolvedValue([{ id: 'p1', nombre: 'Distribuidora Sur', precio_venta: 3500, costo: 2400 }])
+    const fila = { ...producto, proveedor: { id: 'p1', nombre: 'Distribuidora Sur', precio_venta: 3500, costo: 2400 } }
+    render(<ProductDetail producto={fila} onEdit={() => {}} onDelete={() => {}} onBack={() => {}} onMovimiento={() => {}} />)
+
+    expect(screen.getByText('Precio de venta').closest('.dato')).toHaveTextContent('$3.500')
+    expect(screen.getByText('Costo').closest('.dato')).toHaveTextContent('$2.400')
+    expect(screen.getByText(/de distribuidora sur/i)).toBeInTheDocument()
+    await waitFor(() => expect(listarProveedoresDeProducto).toHaveBeenCalled())
+  })
+
   it('editar llama a onEdit', async () => {
     const onEdit = vi.fn()
     const user = userEvent.setup()

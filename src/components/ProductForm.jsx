@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useCategorias } from '../hooks/useCategorias.js'
 import { useProveedores } from '../hooks/useProveedores.js'
 import ModalHeader from './ModalHeader.jsx'
 import Icono from './Icono.jsx'
+import EscanerEnLinea from './EscanerEnLinea.jsx'
 
 export default function ProductForm ({ producto, codigoInicial = '', proveedoresSeleccionados = [], error, onSave, onCancel }) {
   const { categorias } = useCategorias()
@@ -15,10 +16,21 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
   const [costo, setCosto] = useState(producto?.costo ?? '')
   const [stockMinimo, setStockMinimo] = useState(producto?.stock_minimo ?? '')
   const [cantidadInicial, setCantidadInicial] = useState('')
-  const [proveedorIds, setProveedorIds] = useState(proveedoresSeleccionados)
+  // Proveedores elegidos, cada uno con su propio precio y costo (vacío = usa el general)
+  const [seleccion, setSeleccion] = useState(() => proveedoresSeleccionados.map((item) => ({
+    proveedorId: item.proveedorId,
+    precioVenta: item.precioVenta ?? '',
+    costo: item.costo ?? ''
+  })))
   const [imagenFile, setImagenFile] = useState(null)
   const [vistaPrevia, setVistaPrevia] = useState(null)
   const [arrastrando, setArrastrando] = useState(false)
+  const [escaneando, setEscaneando] = useState(false)
+
+  const handleCodigoLeido = useCallback((codigo) => {
+    setId(codigo)
+    setEscaneando(false)
+  }, [])
 
   // Vista previa local de la foto elegida (solo para mostrarla en el formulario).
   useEffect(() => {
@@ -34,12 +46,19 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
   const fotoVisible = vistaPrevia ?? producto?.imagen_url ?? null
 
   function toggleProveedor (proveedorId) {
-    setProveedorIds((actuales) =>
-      actuales.includes(proveedorId)
-        ? actuales.filter((p) => p !== proveedorId)
-        : [...actuales, proveedorId]
+    setSeleccion((actuales) =>
+      actuales.some((s) => s.proveedorId === proveedorId)
+        ? actuales.filter((s) => s.proveedorId !== proveedorId)
+        : [...actuales, { proveedorId, precioVenta: '', costo: '' }]
     )
   }
+
+  function actualizarProveedor (proveedorId, campo, valor) {
+    setSeleccion((actuales) => actuales.map((s) => (s.proveedorId === proveedorId ? { ...s, [campo]: valor } : s)))
+  }
+
+  const numeroONulo = (texto) => (texto === '' ? null : Number(texto))
+  const nombreProveedor = Object.fromEntries(proveedores.map((p) => [p.id, p.nombre]))
 
   function handleSoltarFoto (event) {
     event.preventDefault()
@@ -61,7 +80,7 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
         costo: Number(costo),
         stock_minimo: Number(stockMinimo)
       },
-      proveedorIds,
+      seleccion.map((s) => ({ proveedorId: s.proveedorId, precioVenta: numeroONulo(s.precioVenta), costo: numeroONulo(s.costo) })),
       imagenFile,
       Number(cantidadInicial) || 0
     )
@@ -91,7 +110,21 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
               disabled={Boolean(producto)}
               required
             />
+            {!producto && (
+              <button
+                type="button"
+                className="campo-accion"
+                onClick={() => setEscaneando((actual) => !actual)}
+                aria-label="Escanear con la cámara"
+                aria-pressed={escaneando}
+              >
+                <Icono nombre="camara" />
+              </button>
+            )}
           </div>
+          {escaneando && (
+            <EscanerEnLinea onDetected={handleCodigoLeido} onCancel={() => setEscaneando(false)} />
+          )}
 
           <label htmlFor="producto-nombre">Nombre</label>
           <div className="campo-icono">
@@ -216,7 +249,7 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
                 <input
                   type="checkbox"
                   className="visualmente-oculto"
-                  checked={proveedorIds.includes(p.id)}
+                  checked={seleccion.some((s) => s.proveedorId === p.id)}
                   onChange={() => toggleProveedor(p.id)}
                 />
                 <Icono nombre="check" />
@@ -224,6 +257,44 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
               </label>
             ))}
           </div>
+
+          {seleccion.length > 0 && (
+            <div className="precios-proveedor">
+              <p className="ayuda">Precio y costo de cada proveedor. Si los dejás vacíos, se usan los precios generales.</p>
+              {seleccion.map((s) => {
+                const nombre = nombreProveedor[s.proveedorId] ?? 'Proveedor'
+                return (
+                  <div key={s.proveedorId} className="precio-proveedor">
+                    <span className="precio-proveedor-nombre">{nombre}</span>
+                    <div className="campo-prefijo">
+                      <span aria-hidden="true">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        inputMode="decimal"
+                        placeholder="Precio"
+                        aria-label={`Precio en ${nombre}`}
+                        value={s.precioVenta}
+                        onChange={(e) => actualizarProveedor(s.proveedorId, 'precioVenta', e.target.value)}
+                      />
+                    </div>
+                    <div className="campo-prefijo">
+                      <span aria-hidden="true">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        inputMode="decimal"
+                        placeholder="Costo"
+                        aria-label={`Costo en ${nombre}`}
+                        value={s.costo}
+                        onChange={(e) => actualizarProveedor(s.proveedorId, 'costo', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </fieldset>
 
         {error && <p className="login-error">{error}</p>}

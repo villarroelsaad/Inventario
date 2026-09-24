@@ -10,19 +10,21 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['icons/*.png'],
+      includeAssets: ['icons/*.png', 'icons/*.svg'],
       manifest: {
         name: 'Registro',
         short_name: 'Registro',
-        description: 'Panel de uso personal',
-        theme_color: '#F7F6F3',
-        background_color: '#F7F6F3',
+        description: 'Control de stock del negocio',
+        lang: 'es',
+        theme_color: '#2d6fd0',
+        background_color: '#eef3f9',
         display: 'standalone',
         start_url: '.',
         scope: '.',
         icons: [
-          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       }
     })

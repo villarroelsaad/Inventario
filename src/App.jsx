@@ -14,9 +14,13 @@ import ProductDetail from './components/ProductDetail.jsx'
 import ProductForm from './components/ProductForm.jsx'
 import MovementForm from './components/MovementForm.jsx'
 import BarcodeScanner from './components/BarcodeScanner.jsx'
+import Avisos from './components/Avisos.jsx'
+import ModalHeader from './components/ModalHeader.jsx'
+import { avisar } from './lib/avisos.js'
+import { filasPorProveedor, precioDeFila } from './lib/filasPorProveedor.js'
 
 export default function App () {
-  const { user, loading } = useAuth()
+  const { user, loading, logout } = useAuth()
   const { productos, filtros, setFiltros, crear, actualizar, borrar } = useProductos()
   const { registrar: registrarMovimiento, error: movimientoError } = useMovimientos()
   const { temaEfectivo, alternarTema } = useTema()
@@ -27,6 +31,7 @@ export default function App () {
   const [tipoMovimiento, setTipoMovimiento] = useState(null)
   const [movimientoDesdeDetalle, setMovimientoDesdeDetalle] = useState(false)
   const [codigoEscaneado, setCodigoEscaneado] = useState('')
+  const [filasEscaneadas, setFilasEscaneadas] = useState([])
   const [productoError, setProductoError] = useState(null)
   const [sidebarColapsada, setSidebarColapsada] = useState(false)
 
@@ -36,6 +41,12 @@ export default function App () {
 
   if (!user) {
     return <Login />
+  }
+
+  function handleSalir () {
+    if (window.confirm('¿Querés cerrar la sesión? Vas a tener que volver a ingresar con tu usuario y contraseña.')) {
+      logout()
+    }
   }
 
   function irAInicio () {
@@ -50,7 +61,7 @@ export default function App () {
 
   async function abrirFormularioEdicion () {
     const proveedores = await listarProveedoresDeProducto(productoActivo.id)
-    setProveedoresDelProducto(proveedores.map((p) => p.id))
+    setProveedoresDelProducto(proveedores.map((p) => ({ proveedorId: p.id, precioVenta: p.precio_venta, costo: p.costo })))
     setProductoError(null)
     setVista('producto-form')
   }
@@ -71,13 +82,14 @@ export default function App () {
     }
   }
 
-  async function handleGuardarProducto (datos, proveedorIds, imagenFile, cantidadInicial) {
+  async function handleGuardarProducto (datos, proveedores, imagenFile, cantidadInicial) {
     try {
       if (productoActivo) {
-        await actualizar(productoActivo.id, datos, proveedorIds, imagenFile)
+        await actualizar(productoActivo.id, datos, proveedores, imagenFile)
       } else {
-        await crear(datos, proveedorIds, imagenFile, cantidadInicial)
+        await crear(datos, proveedores, imagenFile, cantidadInicial)
       }
+      avisar(productoActivo ? 'Producto actualizado' : 'Producto guardado')
       irAInicio()
     } catch (err) {
       setProductoError(err.message)
@@ -86,6 +98,7 @@ export default function App () {
 
   async function handleEliminarProducto () {
     await borrar(productoActivo.id)
+    avisar('Producto eliminado')
     irAInicio()
   }
 
@@ -108,8 +121,10 @@ export default function App () {
   async function handleGuardarMovimiento (cantidad, motivo) {
     try {
       await registrarMovimiento({ productoId: productoActivo.id, tipo: tipoMovimiento, cantidad, motivo })
+      avisar(tipoMovimiento === 'entrada' ? 'Entrada registrada' : 'Salida registrada')
       if (movimientoDesdeDetalle) {
-        setProductoActivo(await obtenerProductoPorId(productoActivo.id))
+        const actualizado = await obtenerProductoPorId(productoActivo.id)
+        setProductoActivo((actual) => ({ ...actual, ...actualizado }))
         setVista('producto-detalle')
       } else {
         irAInicio()
@@ -134,9 +149,20 @@ export default function App () {
 
   async function manejarCodigoEscaneado (codigo) {
     const producto = await obtenerProductoPorId(codigo)
-    if (producto) {
+    if (producto && tipoMovimiento) {
+      // El stock es uno solo por producto: para un movimiento no importa el proveedor.
       setProductoActivo(producto)
-      setVista(tipoMovimiento ? 'movimiento-form' : 'producto-detalle')
+      setVista('movimiento-form')
+    } else if (producto) {
+      const proveedores = await listarProveedoresDeProducto(codigo)
+      const filas = filasPorProveedor([{ ...producto, proveedores }])
+      if (filas.length > 1) {
+        setFilasEscaneadas(filas)
+        setVista('escaneo-elegir-proveedor')
+      } else {
+        setProductoActivo(filas[0])
+        setVista('producto-detalle')
+      }
     } else {
       setTipoMovimiento(null)
       setProductoActivo(null)
@@ -151,13 +177,13 @@ export default function App () {
   }
 
   function cerrarModalActivo () {
-    if (vista === 'producto-detalle') irAInicio()
+    if (vista === 'producto-detalle' || vista === 'escaneo-elegir-proveedor') irAInicio()
     else if (vista === 'producto-form') handleCancelarForm()
     else if (vista === 'movimiento-form') cancelarMovimiento()
     else if (vista === 'escaneo') cancelarEscaneo()
   }
 
-  const vistaModal = ['producto-detalle', 'producto-form', 'movimiento-form', 'escaneo'].includes(vista)
+  const vistaModal = ['producto-detalle', 'producto-form', 'movimiento-form', 'escaneo', 'escaneo-elegir-proveedor'].includes(vista)
 
   return (
     <div className={sidebarColapsada ? 'app-shell colapsada' : 'app-shell'}>
@@ -197,6 +223,10 @@ export default function App () {
               ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
               : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" /></svg>}
             <span className="nav-label">{temaEfectivo === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>
+          </button>
+          <button type="button" className="nav-salir" onClick={handleSalir} aria-label="Salir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></svg>
+            <span className="nav-label">Salir</span>
           </button>
         </div>
       </nav>
@@ -288,6 +318,30 @@ export default function App () {
               />
             )}
 
+            {vista === 'escaneo-elegir-proveedor' && (
+              <section className="hoja elegir-proveedor">
+                <ModalHeader
+                  icono="proveedor"
+                  titulo={filasEscaneadas[0]?.nombre}
+                  bajada="Este código lo traen varios proveedores. ¿De cuál es?"
+                  onClose={irAInicio}
+                />
+                <div className="hoja-cuerpo">
+                  <ul className="movement-picker-lista">
+                    {filasEscaneadas.map((fila) => (
+                      <li key={fila.clave}>
+                        <button type="button" onClick={() => abrirDetalle(fila)}>
+                          <span className="product-thumb">{fila.proveedor.nombre.charAt(0).toUpperCase()}</span>
+                          <span className="product-nombre">{fila.proveedor.nombre}</span>
+                          <span className="product-precio">${Number(precioDeFila(fila) ?? 0).toLocaleString('es-AR')}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+            )}
+
             {vista === 'escaneo' && (
               <BarcodeScanner
                 onDetected={manejarCodigoEscaneado}
@@ -297,6 +351,8 @@ export default function App () {
           </div>
         </div>
       )}
+
+      <Avisos />
     </div>
   )
 }

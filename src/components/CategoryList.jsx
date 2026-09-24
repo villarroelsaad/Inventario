@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { avisar } from '../lib/avisos.js'
 import { useCategorias } from '../hooks/useCategorias.js'
 import CategoryForm from './CategoryForm.jsx'
 
@@ -15,6 +16,7 @@ export default function CategoryList () {
       } else {
         await crear(nombre)
       }
+      avisar('Categoría guardada')
       setEditando(null)
     } finally {
       setGuardando(false)
@@ -25,6 +27,7 @@ export default function CategoryList () {
     const confirmado = window.confirm(`¿Seguro que querés eliminar ${categoria.nombre}? No se puede deshacer.`)
     if (confirmado) {
       await borrar(categoria.id)
+      avisar('Categoría eliminada')
     }
   }
 

@@ -10,6 +10,8 @@ const useCategoriasMock = vi.fn()
 vi.mock('../hooks/useCategorias.js', () => ({
   useCategorias: (...args) => useCategoriasMock(...args)
 }))
+const avisar = vi.fn()
+vi.mock('../lib/avisos.js', () => ({ avisar: (...args) => avisar(...args) }))
 
 const { default: CategoryList } = await import('./CategoryList.jsx')
 
@@ -45,6 +47,7 @@ describe('CategoryList', () => {
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
     expect(crear).toHaveBeenCalledWith('Almacén')
+    expect(avisar).toHaveBeenCalledWith('Categoría guardada')
   })
 
   it('pide confirmacion en espanol simple antes de borrar', async () => {

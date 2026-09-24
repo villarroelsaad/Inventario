@@ -31,9 +31,9 @@ export function useProductos () {
     cargar(filtros)
   }, [cargar, filtros])
 
-  const crear = useCallback(async (datos, proveedorIds = [], imagenFile = null, cantidadInicial = 0) => {
+  const crear = useCallback(async (datos, proveedores = [], imagenFile = null, cantidadInicial = 0) => {
     let nuevo = await crearProducto(datos)
-    await reemplazarProveedoresDeProducto(nuevo.id, proveedorIds)
+    await reemplazarProveedoresDeProducto(nuevo.id, proveedores)
     if (imagenFile) {
       const url = await subirImagenProducto(nuevo.id, imagenFile)
       nuevo = await actualizarProducto(nuevo.id, { imagen_url: url })
@@ -50,9 +50,9 @@ export function useProductos () {
     return nuevo
   }, [cargar, filtros])
 
-  const actualizar = useCallback(async (id, cambios, proveedorIds = [], imagenFile = null) => {
+  const actualizar = useCallback(async (id, cambios, proveedores = [], imagenFile = null) => {
     let actualizado = await actualizarProducto(id, cambios)
-    await reemplazarProveedoresDeProducto(id, proveedorIds)
+    await reemplazarProveedoresDeProducto(id, proveedores)
     if (imagenFile) {
       const url = await subirImagenProducto(id, imagenFile)
       actualizado = await actualizarProducto(id, { imagen_url: url })

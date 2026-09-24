@@ -39,7 +39,8 @@ create table proveedores (
 create table producto_proveedor (
   producto_id text references productos(id) on delete cascade,
   proveedor_id uuid references proveedores(id) on delete cascade,
-  costo numeric(12,2),
+  precio_venta numeric(12,2),        -- precio de venta de ese proveedor (vacío = usa el del producto)
+  costo numeric(12,2),               -- costo de ese proveedor (vacío = usa el del producto)
   primary key (producto_id, proveedor_id)
 );
 
@@ -143,3 +144,12 @@ npm test
    y publica en `https://<usuario>.github.io/<nombre-repo>/`.
 5. Abrir esa dirección desde el celular y la PC, y usar "Agregar a pantalla de inicio" para
    instalarla como app.
+
+## Cambios de base de datos posteriores
+
+Si la base se creó antes de estos cambios, correr en el SQL Editor de Supabase:
+
+```sql
+-- 2026-09-24: cada proveedor puede tener su propio precio de venta para un producto
+alter table producto_proveedor add column if not exists precio_venta numeric(12,2);
+```

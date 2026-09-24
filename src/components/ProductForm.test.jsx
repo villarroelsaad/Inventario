@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 const useCategoriasMock = vi.fn()
@@ -12,6 +12,14 @@ vi.mock('../hooks/useProveedores.js', () => ({
   useProveedores: (...args) => useProveedoresMock(...args)
 }))
 
+let escanerOnDetected = null
+vi.mock('../hooks/useBarcodeScanner.js', () => ({
+  useBarcodeScanner: (onDetected) => {
+    escanerOnDetected = onDetected
+    return { videoRef: { current: null }, error: null }
+  }
+}))
+
 const { default: ProductForm } = await import('./ProductForm.jsx')
 
 beforeEach(() => {
@@ -22,6 +30,24 @@ beforeEach(() => {
 })
 
 describe('ProductForm', () => {
+  it('crear: el boton de escanear abre la camara y completa el codigo leido', async () => {
+    const user = userEvent.setup()
+    const { container } = render(<ProductForm onSave={() => {}} onCancel={() => {}} />)
+
+    await user.click(screen.getByRole('button', { name: /escanear con la cámara/i }))
+    expect(container.querySelector('video')).toBeInTheDocument()
+
+    act(() => escanerOnDetected('7790001112223'))
+
+    expect(screen.getByLabelText(/código/i)).toHaveValue('7790001112223')
+    expect(container.querySelector('video')).not.toBeInTheDocument()
+  })
+
+  it('editar: no ofrece escanear porque el codigo no se puede cambiar', () => {
+    render(<ProductForm producto={{ id: 'A1', nombre: 'Yerba' }} onSave={() => {}} onCancel={() => {}} />)
+    expect(screen.queryByRole('button', { name: /escanear con la cámara/i })).not.toBeInTheDocument()
+  })
+
   it('muestra el error si se pasa por props (ej. codigo duplicado)', () => {
     render(<ProductForm error="Ya existe un producto con ese código" onSave={() => {}} onCancel={() => {}} />)
 
@@ -58,10 +84,27 @@ describe('ProductForm', () => {
         costo: 2000,
         stock_minimo: 5
       },
-      ['p1'],
+      [{ proveedorId: 'p1', precioVenta: null, costo: null }],
       null,
       10
     )
+  })
+
+  it('al elegir un proveedor se pueden cargar su precio y costo propios', async () => {
+    const onSave = vi.fn()
+    const user = userEvent.setup()
+    render(<ProductForm onSave={onSave} onCancel={() => {}} />)
+
+    await user.type(screen.getByLabelText(/código/i), 'A1')
+    await user.type(screen.getByLabelText(/nombre/i), 'Yerba')
+    expect(screen.queryByLabelText('Precio en Distribuidora Sur')).not.toBeInTheDocument()
+
+    await user.click(screen.getByLabelText('Distribuidora Sur'))
+    await user.type(screen.getByLabelText('Precio en Distribuidora Sur'), '3300')
+    await user.type(screen.getByLabelText('Costo en Distribuidora Sur'), '2100')
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+
+    expect(onSave.mock.calls[0][1]).toEqual([{ proveedorId: 'p1', precioVenta: 3300, costo: 2100 }])
   })
 
   it('editar: no muestra el campo de cantidad inicial (el stock se cambia con movimientos)', () => {
@@ -86,7 +129,7 @@ describe('ProductForm', () => {
           costo: 2000,
           stock_minimo: 5
         }}
-        proveedoresSeleccionados={['p1']}
+        proveedoresSeleccionados={[{ proveedorId: 'p1', precioVenta: 3300, costo: 2100 }]}
         onSave={() => {}}
         onCancel={() => {}}
       />
@@ -96,6 +139,7 @@ describe('ProductForm', () => {
     expect(screen.getByLabelText(/código/i)).toBeDisabled()
     expect(screen.getByLabelText(/nombre/i)).toHaveValue('Yerba 1kg')
     expect(screen.getByLabelText('Distribuidora Sur')).toBeChecked()
+    expect(screen.getByLabelText('Precio en Distribuidora Sur')).toHaveValue(3300)
   })
 
   it('cancelar llama a onCancel', async () => {

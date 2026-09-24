@@ -1,4 +1,6 @@
-const ENCABEZADO = ['Código', 'Nombre', 'Categoría', 'Precio de venta', 'Costo', 'Stock', 'Stock mínimo']
+import { precioDeFila, costoDeFila } from '../lib/filasPorProveedor.js'
+
+const ENCABEZADO = ['Código', 'Nombre', 'Categoría', 'Proveedor', 'Precio de venta', 'Costo', 'Stock', 'Stock mínimo']
 
 function escaparCampoCsv (valor) {
   const texto = valor == null ? '' : String(valor)
@@ -15,8 +17,9 @@ export function generarCsvProductos (productos, categorias = []) {
     p.id,
     p.nombre,
     nombrePorCategoria.get(p.categoria_id) ?? '',
-    p.precio_venta,
-    p.costo,
+    p.proveedor?.nombre ?? '',
+    precioDeFila(p),
+    costoDeFila(p),
     p.stock,
     p.stock_minimo
   ])

@@ -7,13 +7,17 @@ const ORDEN_COLUMNA = {
   reciente: 'created_at'
 }
 
-export async function listarProductos ({ busqueda, categoriaId, proveedorId, precioMin, precioMax, orden } = {}) {
+const PROVEEDORES_EMBEBIDOS = 'proveedor_id, precio_venta, costo, proveedores(nombre)'
+
+// El rango de precio no se filtra acá: cada proveedor puede tener su propio precio,
+// así que se aplica sobre cada fila producto+proveedor (ver lib/filasPorProveedor.js).
+export async function listarProductos ({ busqueda, categoriaId, proveedorId, orden } = {}) {
   let query = supabase.from('productos')
 
   if (proveedorId) {
-    query = query.select('*, producto_proveedor!inner(proveedor_id)').eq('producto_proveedor.proveedor_id', proveedorId)
+    query = query.select(`*, producto_proveedor!inner(${PROVEEDORES_EMBEBIDOS})`).eq('producto_proveedor.proveedor_id', proveedorId)
   } else {
-    query = query.select('*')
+    query = query.select(`*, producto_proveedor(${PROVEEDORES_EMBEBIDOS})`)
   }
 
   if (busqueda) {
@@ -21,12 +25,6 @@ export async function listarProductos ({ busqueda, categoriaId, proveedorId, pre
   }
   if (categoriaId) {
     query = query.eq('categoria_id', categoriaId)
-  }
-  if (precioMin != null) {
-    query = query.gte('precio_venta', precioMin)
-  }
-  if (precioMax != null) {
-    query = query.lte('precio_venta', precioMax)
   }
 
   const columnaOrden = ORDEN_COLUMNA[orden] ?? 'nombre'
@@ -36,7 +34,15 @@ export async function listarProductos ({ busqueda, categoriaId, proveedorId, pre
   if (error) {
     throw new Error('No se pudieron cargar los productos')
   }
-  return data.map(({ producto_proveedor, ...producto }) => producto)
+  return data.map(({ producto_proveedor: relaciones, ...producto }) => ({
+    ...producto,
+    proveedores: (relaciones ?? []).map((r) => ({
+      id: r.proveedor_id,
+      nombre: r.proveedores?.nombre ?? '',
+      precio_venta: r.precio_venta,
+      costo: r.costo
+    }))
+  }))
 }
 
 export async function obtenerProductoPorId (id) {
