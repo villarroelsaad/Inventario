@@ -11,8 +11,8 @@ describe('generarCsvProductos', () => {
     const csv = generarCsvProductos(productos, categorias)
 
     expect(csv).toBe(
-      'Código,Nombre,Categoría,Proveedor,Precio de venta,Costo,Stock,Stock mínimo\n' +
-      'A1,Yerba 1kg,Almacén,,3200,2000,10,5'
+      'Código,Nombre,Categoría,Proveedor,Precio de venta,Costo,Ganancia por unidad,Margen %,Stock,Stock mínimo\n' +
+      'A1,Yerba 1kg,Almacén,,3200,2000,1200,38,10,5'
     )
   })
 
@@ -23,7 +23,7 @@ describe('generarCsvProductos', () => {
 
     const csv = generarCsvProductos(productos, [])
 
-    expect(csv).toContain('A2,Fideos,,,800,500,3,2')
+    expect(csv).toContain('A2,Fideos,,,800,500,300,38,3,2')
   })
 
   it('escapa campos con comas, comillas o saltos de línea', () => {
@@ -42,13 +42,13 @@ describe('generarCsvProductos', () => {
       proveedor: { id: 'p1', nombre: 'Distribuidora Sur', precio_venta: 3200, costo: 2000 }
     }]
 
-    expect(generarCsvProductos(filas, [])).toContain('A1,Yerba,,Distribuidora Sur,3200,2000,10,5')
+    expect(generarCsvProductos(filas, [])).toContain('A1,Yerba,,Distribuidora Sur,3200,2000,1200,38,10,5')
   })
 
   it('sin productos, deja solo el encabezado', () => {
     const csv = generarCsvProductos([], [])
 
-    expect(csv).toBe('Código,Nombre,Categoría,Proveedor,Precio de venta,Costo,Stock,Stock mínimo')
+    expect(csv).toBe('Código,Nombre,Categoría,Proveedor,Precio de venta,Costo,Ganancia por unidad,Margen %,Stock,Stock mínimo')
   })
 })
 

@@ -48,6 +48,27 @@ describe('ProductForm', () => {
     expect(screen.queryByRole('button', { name: /escanear con la cámara/i })).not.toBeInTheDocument()
   })
 
+  it('mientras se cargan precio y costo muestra cuanto se gana por unidad', async () => {
+    const user = userEvent.setup()
+    render(<ProductForm onSave={() => {}} onCancel={() => {}} />)
+
+    await user.type(screen.getByLabelText(/precio de venta/i), '12')
+    await user.type(screen.getByLabelText(/^costo$/i), '8')
+
+    expect(screen.getByText('Ganás $4 por unidad (33%)')).toBeInTheDocument()
+  })
+
+  it('avisa si el precio de un proveedor queda por debajo de su costo', async () => {
+    const user = userEvent.setup()
+    render(<ProductForm onSave={() => {}} onCancel={() => {}} />)
+
+    await user.click(screen.getByLabelText('Distribuidora Sur'))
+    await user.type(screen.getByLabelText('Precio en Distribuidora Sur'), '8')
+    await user.type(screen.getByLabelText('Costo en Distribuidora Sur'), '10')
+
+    expect(screen.getByText('Perdés $2 por unidad (-25%)')).toBeInTheDocument()
+  })
+
   it('muestra el error si se pasa por props (ej. codigo duplicado)', () => {
     render(<ProductForm error="Ya existe un producto con ese código" onSave={() => {}} onCancel={() => {}} />)
 

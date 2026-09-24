@@ -3,7 +3,8 @@ import { useCategorias } from '../hooks/useCategorias.js'
 import { useProveedores } from '../hooks/useProveedores.js'
 import { generarCsvProductos, descargarCsv } from '../services/exportCsv.js'
 import { estadoStock } from '../lib/estadoStock.js'
-import { filasPorProveedor, precioDeFila } from '../lib/filasPorProveedor.js'
+import { filasPorProveedor, precioDeFila, costoDeFila } from '../lib/filasPorProveedor.js'
+import { calcularMargen } from '../lib/margen.js'
 import Icono from './Icono.jsx'
 
 export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) {
@@ -15,6 +16,12 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
   const valorEnStock = productos.reduce((total, p) => {
     const precio = p.precio_venta ?? p.proveedores?.[0]?.precio_venta ?? 0
     return total + precio * p.stock
+  }, 0)
+  const gananciaPosible = productos.reduce((total, p) => {
+    const precio = p.precio_venta ?? p.proveedores?.[0]?.precio_venta
+    const costo = p.costo ?? p.proveedores?.[0]?.costo
+    const margen = calcularMargen(precio, costo)
+    return margen ? total + margen.ganancia * p.stock : total
   }, 0)
   const filas = filasPorProveedor(productos, filtros)
 
@@ -67,6 +74,9 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
           <span className="stat-icono"><Icono nombre="dinero" /></span>
           <span className="valor">${valorEnStock.toLocaleString('es-AR')}</span>
           <span className="label">Valor en stock</span>
+          {gananciaPosible !== 0 && (
+            <span className="stat-sub">Ganancia posible ${gananciaPosible.toLocaleString('es-AR')}</span>
+          )}
         </div>
       </div>
 
@@ -175,7 +185,11 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
       {filas.length > 0 && (
         <div className="tabla-cabecera" aria-hidden="true">
           <span>Producto</span>
+          <span>Código</span>
+          <span>Categoría</span>
+          <span>Proveedor</span>
           <span>Precio</span>
+          <span>Margen</span>
           <span>Stock</span>
           <span>Estado</span>
         </div>
@@ -184,7 +198,6 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
       <ul className="tabla-productos">
         {filas.map((producto) => {
           const estado = estadoStock(producto)
-          const meta = [nombreCategoria[producto.categoria_id] ?? 'Sin categoría', producto.proveedor?.nombre].filter(Boolean).join(' · ')
           return (
             <li
               key={producto.clave}
@@ -194,9 +207,21 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento }) 
                 <span className="product-thumb">{producto.nombre.charAt(0).toUpperCase()}</span>
                 <span className="product-info">
                   <span className="product-nombre">{producto.nombre}</span>
-                  <span className="product-meta">{meta}</span>
+                  <span className="product-meta">{nombreCategoria[producto.categoria_id] ?? 'Sin categoría'}</span>
+                </span>
+                <span className="product-codigo">{producto.id}</span>
+                <span className={producto.proveedor ? 'product-proveedor' : 'product-proveedor sin'}>
+                  {producto.proveedor?.nombre ?? 'Sin proveedor'}
                 </span>
                 <span className="product-precio">${Number(precioDeFila(producto) ?? 0).toLocaleString('es-AR')}</span>
+                {(() => {
+                  const margen = calcularMargen(precioDeFila(producto), costoDeFila(producto))
+                  return (
+                    <span className={margen ? `product-margen margen-${margen.nivel}` : 'product-margen'}>
+                      {margen ? `${margen.porcentaje}%` : '—'}
+                    </span>
+                  )
+                })()}
                 <span className={`badge ${estado.clave}`}>{producto.stock}</span>
                 <span className={`estado estado-${estado.clave}`}>{estado.texto}</span>
               </button>

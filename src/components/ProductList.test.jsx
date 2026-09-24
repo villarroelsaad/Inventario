@@ -190,6 +190,43 @@ describe('ProductList', () => {
     expect(screen.getByText('1 producto en total')).toBeInTheDocument()
   })
 
+  it('cada fila muestra su proveedor, o "Sin proveedor" si no tiene', () => {
+    useProductosMock.mockReturnValue({
+      productos: [
+        { id: 'A1', nombre: 'Yerba', stock: 24, stock_minimo: 5, proveedores: [{ id: 'p1', nombre: 'fc', precio_venta: 12, costo: 8 }] },
+        { id: 'B1', nombre: 'Pan', stock: 3, stock_minimo: 1, proveedores: [] }
+      ],
+      filtros: {},
+      setFiltros,
+      loading: false,
+      error: null
+    })
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    expect(screen.getByText('Yerba').closest('li').querySelector('.product-proveedor')).toHaveTextContent('fc')
+    expect(screen.getByText('Pan').closest('li').querySelector('.product-proveedor')).toHaveTextContent('Sin proveedor')
+  })
+
+  it('cada fila muestra el codigo del producto', () => {
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+    expect(screen.getByText('Yerba').closest('li').querySelector('.product-codigo')).toHaveTextContent('A1')
+  })
+
+  it('cada fila muestra su margen y la tarjeta de valor en stock suma la ganancia posible', () => {
+    useProductosMock.mockReturnValue({
+      productos: [{ id: 'A1', nombre: 'Yerba', stock: 10, stock_minimo: 5, precio_venta: 12, costo: 8, proveedores: [] }],
+      filtros: {},
+      setFiltros,
+      loading: false,
+      error: null
+    })
+    render(<ProductList onSelect={() => {}} onAdd={() => {}} />)
+
+    expect(screen.getByText('Yerba').closest('li').querySelector('.product-margen')).toHaveTextContent('33%')
+    // 10 unidades x $4 de ganancia
+    expect(screen.getByText('Valor en stock').closest('.stat-tile')).toHaveTextContent('Ganancia posible $40')
+  })
+
   it('sin productos, invita a cargar el primero', () => {
     useProductosMock.mockReturnValue({ productos: [], filtros: {}, setFiltros, loading: false, error: null })
     render(<ProductList onSelect={() => {}} onAdd={() => {}} />)

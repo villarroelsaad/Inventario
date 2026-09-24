@@ -1,6 +1,7 @@
 import { precioDeFila, costoDeFila } from '../lib/filasPorProveedor.js'
+import { calcularMargen } from '../lib/margen.js'
 
-const ENCABEZADO = ['Código', 'Nombre', 'Categoría', 'Proveedor', 'Precio de venta', 'Costo', 'Stock', 'Stock mínimo']
+const ENCABEZADO = ['Código', 'Nombre', 'Categoría', 'Proveedor', 'Precio de venta', 'Costo', 'Ganancia por unidad', 'Margen %', 'Stock', 'Stock mínimo']
 
 function escaparCampoCsv (valor) {
   const texto = valor == null ? '' : String(valor)
@@ -13,16 +14,21 @@ function escaparCampoCsv (valor) {
 export function generarCsvProductos (productos, categorias = []) {
   const nombrePorCategoria = new Map(categorias.map((c) => [c.id, c.nombre]))
 
-  const filas = productos.map((p) => [
+  const filas = productos.map((p) => {
+    const margen = calcularMargen(precioDeFila(p), costoDeFila(p))
+    return [
     p.id,
     p.nombre,
     nombrePorCategoria.get(p.categoria_id) ?? '',
     p.proveedor?.nombre ?? '',
     precioDeFila(p),
     costoDeFila(p),
+    margen?.ganancia,
+    margen?.porcentaje,
     p.stock,
     p.stock_minimo
-  ])
+    ]
+  })
 
   return [ENCABEZADO, ...filas]
     .map((fila) => fila.map(escaparCampoCsv).join(','))

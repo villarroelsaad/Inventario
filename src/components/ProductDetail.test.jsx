@@ -56,6 +56,12 @@ describe('ProductDetail', () => {
     await waitFor(() => expect(listarProveedoresDeProducto).toHaveBeenCalled())
   })
 
+  it('muestra la ganancia por unidad y el margen', () => {
+    render(<ProductDetail producto={producto} onEdit={() => {}} onDelete={() => {}} onBack={() => {}} onMovimiento={() => {}} />)
+    // precio 3200, costo 2000 -> ganancia 1200, 38%
+    expect(screen.getByText('Ganancia por unidad').closest('.dato')).toHaveTextContent('$1.200 (38%)')
+  })
+
   it('editar llama a onEdit', async () => {
     const onEdit = vi.fn()
     const user = userEvent.setup()

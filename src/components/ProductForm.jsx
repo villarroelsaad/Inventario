@@ -4,6 +4,7 @@ import { useProveedores } from '../hooks/useProveedores.js'
 import ModalHeader from './ModalHeader.jsx'
 import Icono from './Icono.jsx'
 import EscanerEnLinea from './EscanerEnLinea.jsx'
+import IndicadorMargen from './IndicadorMargen.jsx'
 
 export default function ProductForm ({ producto, codigoInicial = '', proveedoresSeleccionados = [], error, onSave, onCancel }) {
   const { categorias } = useCategorias()
@@ -182,6 +183,7 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
               </div>
             </div>
           </div>
+          <IndicadorMargen precio={precioVenta} costo={costo} />
         </div>
 
         <div className="form-seccion">
@@ -290,6 +292,10 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
                         onChange={(e) => actualizarProveedor(s.proveedorId, 'costo', e.target.value)}
                       />
                     </div>
+                    <IndicadorMargen
+                      precio={s.precioVenta === '' ? precioVenta : s.precioVenta}
+                      costo={s.costo === '' ? costo : s.costo}
+                    />
                   </div>
                 )
               })}

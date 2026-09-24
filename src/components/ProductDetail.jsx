@@ -3,6 +3,7 @@ import { listarProveedoresDeProducto } from '../services/productoProveedor.js'
 import { listarMovimientosPorProducto } from '../services/movimientos.js'
 import { estadoStock } from '../lib/estadoStock.js'
 import { precioDeFila, costoDeFila } from '../lib/filasPorProveedor.js'
+import { calcularMargen } from '../lib/margen.js'
 import Icono from './Icono.jsx'
 
 function pesos (valor) {
@@ -37,6 +38,7 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
   }
 
   const estado = estadoStock(producto)
+  const margen = calcularMargen(precioDeFila(producto), costoDeFila(producto))
 
   return (
     <section className="product-detail hoja">
@@ -66,6 +68,12 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
             <dt>Costo</dt>
             <dd>{pesos(costoDeFila(producto))}</dd>
           </div>
+          {margen && (
+            <div className={`dato dato-margen margen-${margen.nivel}`}>
+              <dt>Ganancia por unidad</dt>
+              <dd>{margen.ganancia < 0 ? '-' : ''}{pesos(Math.abs(margen.ganancia))} ({margen.porcentaje}%)</dd>
+            </div>
+          )}
           <div className={`dato dato-stock estado-${estado.clave}`}>
             <dt>Stock</dt>
             <dd>{producto.stock}</dd>
