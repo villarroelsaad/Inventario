@@ -7,6 +7,8 @@ const versionesLista = []
 const borrar = vi.fn()
 const registrar = vi.fn()
 
+// App arrastra pantallas que importan el cliente real; en CI no hay .env y fallaría al crearlo
+vi.mock('./lib/supabaseClient.js', () => ({ supabase: {} }))
 vi.mock('./hooks/useAuth.js', () => ({
   useAuth: () => ({ user: { id: 'u1' }, loading: false, logout: vi.fn() })
 }))
