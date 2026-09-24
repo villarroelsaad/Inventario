@@ -28,31 +28,42 @@ export default function CategoryList () {
     }
   }
 
-  if (editando !== null) {
-    return (
-      <CategoryForm
-        categoria={editando.id ? editando : undefined}
-        onSave={handleSave}
-        onCancel={() => setEditando(null)}
-        disabled={guardando}
-      />
-    )
-  }
-
   return (
     <section className="category-list">
-      <h1>Categorías</h1>
+      <div className="list-header">
+        <h1>Categorías</h1>
+        <button type="button" onClick={() => setEditando({})} className="btn-agregar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+          Agregar categoría
+        </button>
+      </div>
+
       {loading && <p>Cargando...</p>}
       {error && <p className="login-error">{error}</p>}
       <ul>
         {categorias.map((categoria) => (
           <li key={categoria.id}>
-            <button type="button" onClick={() => setEditando(categoria)}>{categoria.nombre}</button>
+            <button type="button" onClick={() => setEditando(categoria)}>
+              <span className="product-thumb">{categoria.nombre.charAt(0).toUpperCase()}</span>
+              {categoria.nombre}
+            </button>
             <button type="button" onClick={() => handleDelete(categoria)}>Eliminar</button>
           </li>
         ))}
       </ul>
-      <button type="button" onClick={() => setEditando({})}>+ Agregar categoría</button>
+
+      {editando !== null && (
+        <div className="modal-backdrop abierto" onClick={(e) => { if (e.target === e.currentTarget) setEditando(null) }}>
+          <div className="modal-card">
+            <CategoryForm
+              categoria={editando.id ? editando : undefined}
+              onSave={handleSave}
+              onCancel={() => setEditando(null)}
+              disabled={guardando}
+            />
+          </div>
+        </div>
+      )}
     </section>
   )
 }

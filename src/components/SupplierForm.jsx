@@ -12,6 +12,7 @@ export default function SupplierForm ({ proveedor, onSave, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="supplier-form">
+      <h1>{proveedor ? 'Editar proveedor' : 'Nuevo proveedor'}</h1>
       <label htmlFor="proveedor-nombre">Nombre</label>
       <input
         id="proveedor-nombre"

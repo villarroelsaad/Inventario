@@ -10,6 +10,7 @@ export default function CategoryForm ({ categoria, onSave, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="category-form">
+      <h1>{categoria ? 'Editar categoría' : 'Nueva categoría'}</h1>
       <label htmlFor="categoria-nombre">Nombre</label>
       <input
         id="categoria-nombre"

@@ -203,20 +203,29 @@ export default function App () {
           <section className="movement-picker">
             <button type="button" onClick={irAInicio} className="link-button">← Volver</button>
             <h1>{tipoMovimiento === 'entrada' ? 'Registrar entrada' : 'Registrar salida'}</h1>
-            <p>Elegí el producto:</p>
-            <input
-              type="search"
-              placeholder="Buscar producto..."
-              aria-label="Buscar producto"
-              value={filtros.busqueda ?? ''}
-              onChange={(e) => setFiltros({ ...filtros, busqueda: e.target.value })}
-            />
-            <button type="button" onClick={abrirEscaneoParaMovimiento}>Escanear código</button>
+            <p className="fecha">Elegí el producto</p>
+
+            <div className="search-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+              <label htmlFor="movimiento-buscar-producto">Buscar producto</label>
+              <input
+                id="movimiento-buscar-producto"
+                type="search"
+                placeholder="Buscar producto..."
+                value={filtros.busqueda ?? ''}
+                onChange={(e) => setFiltros({ ...filtros, busqueda: e.target.value })}
+              />
+            </div>
+
+            <button type="button" onClick={abrirEscaneoParaMovimiento} className="link-button">Escanear código en vez de buscar</button>
+
             <ul className="movement-picker-lista">
               {productos.map((p) => (
                 <li key={p.id}>
                   <button type="button" onClick={() => elegirProductoParaMovimiento(p)}>
-                    {p.nombre} — stock: {p.stock}
+                    <span className="product-thumb">{p.nombre.charAt(0).toUpperCase()}</span>
+                    <span className="product-nombre">{p.nombre}</span>
+                    <span className={p.stock < p.stock_minimo ? 'badge bajo' : 'badge ok'}>{p.stock}</span>
                   </button>
                 </li>
               ))}

@@ -46,6 +46,12 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+h1 {
+  font-size: 1.4rem;
+  font-weight: 900;
+  margin: 0 0 4px;
+}
+
 input, select {
   font-family: inherit;
   font-size: 1rem;
@@ -274,7 +280,7 @@ body:has(.login) {
 }
 
 .list-header h1 { font-size: 1.4rem; font-weight: 900; margin: 0; }
-.list-header .fecha { font-size: 0.8rem; color: var(--ink-soft); font-weight: 500; }
+.fecha { font-size: 0.8rem; color: var(--ink-soft); font-weight: 500; margin: 0; }
 
 .btn-agregar {
   position: fixed;
@@ -450,7 +456,7 @@ body:has(.login) {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
-  padding: 4px 4px 4px 14px;
+  padding: 4px 14px 4px 14px;
 }
 
 .category-list li:last-child, .supplier-list li:last-child {
@@ -459,11 +465,14 @@ body:has(.login) {
 
 .category-list li button:first-child, .supplier-list li button:first-child {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   text-align: left;
   background: transparent;
   color: var(--ink);
   font-weight: 500;
-  padding: 14px 0;
+  padding: 12px 0;
 }
 
 .category-list li button:last-child, .supplier-list li button:last-child {
@@ -531,6 +540,12 @@ body:has(.login) {
 @keyframes modal-subir {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-card h1 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0 0 4px;
 }
 
 /* ========================================================= */
@@ -647,14 +662,9 @@ body:has(.login) {
   margin: 12px 0 0;
 }
 
-.movement-picker input[type="search"] {
-  width: 100%;
-  margin: 12px 0;
-}
-
 .movement-picker-lista {
   list-style: none;
-  margin: 12px 0;
+  margin: 14px 0;
   padding: 0;
   background: var(--surface);
   border-radius: 14px;
@@ -667,11 +677,14 @@ body:has(.login) {
 
 .movement-picker-lista button {
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   text-align: left;
   background: transparent;
   color: var(--ink);
   font-weight: 500;
-  padding: 14px;
+  padding: 12px 14px;
 }
 
 .barcode-scanner-video {

@@ -43,6 +43,7 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
 
   return (
     <form onSubmit={handleSubmit} className="product-form">
+      <h1>{producto ? 'Editar producto' : 'Nuevo producto'}</h1>
       <label htmlFor="producto-id">Código</label>
       <input
         id="producto-id"
