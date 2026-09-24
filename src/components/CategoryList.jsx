@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { avisar } from '../lib/avisos.js'
 import { useCategorias } from '../hooks/useCategorias.js'
 import CategoryForm from './CategoryForm.jsx'
+import ModalAnimado from './ModalAnimado.jsx'
 
 export default function CategoryList () {
   const { categorias, loading, error, crear, actualizar, borrar } = useCategorias()
@@ -58,18 +59,16 @@ export default function CategoryList () {
         ))}
       </ul>
 
-      {editando !== null && (
-        <div className="modal-backdrop abierto" onClick={(e) => { if (e.target === e.currentTarget) setEditando(null) }}>
-          <div className="modal-card">
-            <CategoryForm
-              categoria={editando.id ? editando : undefined}
-              onSave={handleSave}
-              onCancel={() => setEditando(null)}
-              disabled={guardando}
-            />
-          </div>
-        </div>
-      )}
+      <ModalAnimado abierto={editando !== null} onCerrar={() => setEditando(null)}>
+        {editando !== null && (
+          <CategoryForm
+            categoria={editando.id ? editando : undefined}
+            onSave={handleSave}
+            onCancel={() => setEditando(null)}
+            disabled={guardando}
+          />
+        )}
+      </ModalAnimado>
     </section>
   )
 }

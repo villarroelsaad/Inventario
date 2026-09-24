@@ -15,6 +15,7 @@ import ProductForm from './components/ProductForm.jsx'
 import MovementForm from './components/MovementForm.jsx'
 import BarcodeScanner from './components/BarcodeScanner.jsx'
 import Avisos from './components/Avisos.jsx'
+import ModalAnimado from './components/ModalAnimado.jsx'
 import ModalHeader from './components/ModalHeader.jsx'
 import { avisar } from './lib/avisos.js'
 import { filasPorProveedor, precioDeFila } from './lib/filasPorProveedor.js'
@@ -284,73 +285,69 @@ export default function App () {
         )}
       </main>
 
-      {vistaModal && (
-        <div className="modal-backdrop abierto" onClick={(e) => { if (e.target === e.currentTarget) cerrarModalActivo() }}>
-          <div className="modal-card">
-            {vista === 'producto-detalle' && productoActivo && (
-              <ProductDetail
-                producto={productoActivo}
-                onEdit={abrirFormularioEdicion}
-                onDelete={handleEliminarProducto}
-                onBack={irAInicio}
-                onMovimiento={handleMovimiento}
-              />
-            )}
+      <ModalAnimado abierto={vistaModal} onCerrar={cerrarModalActivo}>
+        {vista === 'producto-detalle' && productoActivo && (
+          <ProductDetail
+            producto={productoActivo}
+            onEdit={abrirFormularioEdicion}
+            onDelete={handleEliminarProducto}
+            onBack={irAInicio}
+            onMovimiento={handleMovimiento}
+          />
+        )}
 
-            {vista === 'producto-form' && (
-              <ProductForm
-                producto={productoActivo}
-                codigoInicial={codigoEscaneado}
-                proveedoresSeleccionados={proveedoresDelProducto}
-                error={productoError}
-                onSave={handleGuardarProducto}
-                onCancel={handleCancelarForm}
-              />
-            )}
+        {vista === 'producto-form' && (
+          <ProductForm
+            producto={productoActivo}
+            codigoInicial={codigoEscaneado}
+            proveedoresSeleccionados={proveedoresDelProducto}
+            error={productoError}
+            onSave={handleGuardarProducto}
+            onCancel={handleCancelarForm}
+          />
+        )}
 
-            {vista === 'movimiento-form' && productoActivo && (
-              <MovementForm
-                producto={productoActivo}
-                tipo={tipoMovimiento}
-                error={movimientoError}
-                onSave={handleGuardarMovimiento}
-                onCancel={cancelarMovimiento}
-              />
-            )}
+        {vista === 'movimiento-form' && productoActivo && (
+          <MovementForm
+            producto={productoActivo}
+            tipo={tipoMovimiento}
+            error={movimientoError}
+            onSave={handleGuardarMovimiento}
+            onCancel={cancelarMovimiento}
+          />
+        )}
 
-            {vista === 'escaneo-elegir-proveedor' && (
-              <section className="hoja elegir-proveedor">
-                <ModalHeader
-                  icono="proveedor"
-                  titulo={filasEscaneadas[0]?.nombre}
-                  bajada="Este código lo traen varios proveedores. ¿De cuál es?"
-                  onClose={irAInicio}
-                />
-                <div className="hoja-cuerpo">
-                  <ul className="movement-picker-lista">
-                    {filasEscaneadas.map((fila) => (
-                      <li key={fila.clave}>
-                        <button type="button" onClick={() => abrirDetalle(fila)}>
-                          <span className="product-thumb">{fila.proveedor.nombre.charAt(0).toUpperCase()}</span>
-                          <span className="product-nombre">{fila.proveedor.nombre}</span>
-                          <span className="product-precio">${Number(precioDeFila(fila) ?? 0).toLocaleString('es-AR')}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </section>
-            )}
+        {vista === 'escaneo-elegir-proveedor' && (
+          <section className="hoja elegir-proveedor">
+            <ModalHeader
+              icono="proveedor"
+              titulo={filasEscaneadas[0]?.nombre}
+              bajada="Este código lo traen varios proveedores. ¿De cuál es?"
+              onClose={irAInicio}
+            />
+            <div className="hoja-cuerpo">
+              <ul className="movement-picker-lista">
+                {filasEscaneadas.map((fila) => (
+                  <li key={fila.clave}>
+                    <button type="button" onClick={() => abrirDetalle(fila)}>
+                      <span className="product-thumb">{fila.proveedor.nombre.charAt(0).toUpperCase()}</span>
+                      <span className="product-nombre">{fila.proveedor.nombre}</span>
+                      <span className="product-precio">${Number(precioDeFila(fila) ?? 0).toLocaleString('es-AR')}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
 
-            {vista === 'escaneo' && (
-              <BarcodeScanner
-                onDetected={manejarCodigoEscaneado}
-                onCancel={cancelarEscaneo}
-              />
-            )}
-          </div>
-        </div>
-      )}
+        {vista === 'escaneo' && (
+          <BarcodeScanner
+            onDetected={manejarCodigoEscaneado}
+            onCancel={cancelarEscaneo}
+          />
+        )}
+      </ModalAnimado>
 
       <Avisos />
     </div>

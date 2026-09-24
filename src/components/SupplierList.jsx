@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { avisar } from '../lib/avisos.js'
 import { useProveedores } from '../hooks/useProveedores.js'
 import SupplierForm from './SupplierForm.jsx'
+import ModalAnimado from './ModalAnimado.jsx'
 
 export default function SupplierList () {
   const { proveedores, loading, error, crear, actualizar, borrar } = useProveedores()
@@ -58,18 +59,16 @@ export default function SupplierList () {
         ))}
       </ul>
 
-      {editando !== null && (
-        <div className="modal-backdrop abierto" onClick={(e) => { if (e.target === e.currentTarget) setEditando(null) }}>
-          <div className="modal-card">
-            <SupplierForm
-              proveedor={editando.id ? editando : undefined}
-              onSave={handleSave}
-              onCancel={() => setEditando(null)}
-              disabled={guardando}
-            />
-          </div>
-        </div>
-      )}
+      <ModalAnimado abierto={editando !== null} onCerrar={() => setEditando(null)}>
+        {editando !== null && (
+          <SupplierForm
+            proveedor={editando.id ? editando : undefined}
+            onSave={handleSave}
+            onCancel={() => setEditando(null)}
+            disabled={guardando}
+          />
+        )}
+      </ModalAnimado>
     </section>
   )
 }
