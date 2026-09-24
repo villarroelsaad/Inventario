@@ -5,9 +5,13 @@ export default function MovementForm ({ producto, tipo, error, onSave, onCancel 
   const [motivo, setMotivo] = useState('')
 
   const titulo = tipo === 'entrada' ? 'Registrar entrada' : 'Registrar salida'
+  const superaStock = tipo === 'salida' && Number(cantidad) > producto.stock
 
   function handleSubmit (event) {
     event.preventDefault()
+    if (superaStock) {
+      return
+    }
     onSave(Number(cantidad), motivo.trim() ? motivo.trim() : null)
   }
 
@@ -36,6 +40,7 @@ export default function MovementForm ({ producto, tipo, error, onSave, onCancel 
         onChange={(e) => setMotivo(e.target.value)}
       />
 
+      {superaStock && <p className="login-error">No hay stock suficiente</p>}
       {error && <p className="login-error">{error}</p>}
 
       <div className="form-actions">

@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react'
 import { listarProveedoresDeProducto } from '../services/productoProveedor.js'
+import { listarMovimientosPorProducto } from '../services/movimientos.js'
 
 export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onMovimiento }) {
   const [proveedores, setProveedores] = useState([])
+  const [movimientos, setMovimientos] = useState([])
 
   useEffect(() => {
     let activo = true
     listarProveedoresDeProducto(producto.id).then((data) => {
       if (activo) setProveedores(data)
+    })
+    return () => { activo = false }
+  }, [producto.id])
+
+  useEffect(() => {
+    let activo = true
+    listarMovimientosPorProducto(producto.id).then((data) => {
+      if (activo) setMovimientos(data)
     })
     return () => { activo = false }
   }, [producto.id])
@@ -52,6 +62,23 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
         <button type="button" onClick={() => onMovimiento('entrada')}>+ Entrada</button>
         <button type="button" onClick={() => onMovimiento('salida')}>− Salida</button>
       </div>
+
+      {movimientos.length > 0 && (
+        <div className="product-detail-historial">
+          <h2>Historial de movimientos</h2>
+          <ul>
+            {movimientos.map((m) => (
+              <li key={m.id}>
+                <span className={m.tipo === 'entrada' ? 'movimiento-entrada' : 'movimiento-salida'}>
+                  {m.tipo === 'entrada' ? '+' : '-'}{m.cantidad}
+                </span>
+                <span className="movimiento-fecha">{new Date(m.fecha).toLocaleDateString()}</span>
+                {m.motivo && <span className="movimiento-motivo">{m.motivo}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="form-actions">
         <button type="button" onClick={handleDelete}>Eliminar</button>

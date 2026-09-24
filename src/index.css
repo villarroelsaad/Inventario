@@ -369,3 +369,45 @@ button:disabled {
   color: var(--stamp-blue);
   border: 1px solid #dcdad4;
 }
+
+.product-detail-historial ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  background: var(--surface);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.product-detail-historial li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e6e4de;
+  font-size: 0.9rem;
+}
+
+.product-detail-historial li:last-child {
+  border-bottom: none;
+}
+
+.movimiento-entrada {
+  font-weight: 700;
+  color: var(--stock-green);
+}
+
+.movimiento-salida {
+  font-weight: 700;
+  color: var(--stamp-red);
+}
+
+.movimiento-fecha {
+  color: #6b7266;
+}
+
+.movimiento-motivo {
+  flex: 1;
+  text-align: right;
+  color: #6b7266;
+}

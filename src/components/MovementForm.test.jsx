@@ -41,6 +41,27 @@ describe('MovementForm', () => {
     expect(screen.getByText('No hay stock suficiente')).toBeInTheDocument()
   })
 
+  it('salida: avisa antes de guardar si la cantidad supera el stock actual', async () => {
+    const onSave = vi.fn()
+    const user = userEvent.setup()
+    render(<MovementForm producto={producto} tipo="salida" onSave={onSave} onCancel={() => {}} />)
+
+    await user.type(screen.getByLabelText(/cantidad/i), '99')
+
+    expect(screen.getByText(/no hay stock suficiente/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^guardar$/i }))
+    expect(onSave).not.toHaveBeenCalled()
+  })
+
+  it('entrada: no avisa de stock aunque la cantidad sea alta', async () => {
+    const user = userEvent.setup()
+    render(<MovementForm producto={producto} tipo="entrada" onSave={() => {}} onCancel={() => {}} />)
+
+    await user.type(screen.getByLabelText(/cantidad/i), '99')
+
+    expect(screen.queryByText(/no hay stock suficiente/i)).not.toBeInTheDocument()
+  })
+
   it('cancelar llama a onCancel', async () => {
     const onCancel = vi.fn()
     const user = userEvent.setup()

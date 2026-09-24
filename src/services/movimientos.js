@@ -11,3 +11,15 @@ export async function registrarMovimiento ({ productoId, tipo, cantidad, motivo 
     throw new Error(error.message)
   }
 }
+
+export async function listarMovimientosPorProducto (productoId) {
+  const { data, error } = await supabase
+    .from('movimientos')
+    .select('*')
+    .eq('producto_id', productoId)
+    .order('fecha', { ascending: false })
+  if (error) {
+    throw new Error('No se pudo cargar el historial de movimientos')
+  }
+  return data
+}

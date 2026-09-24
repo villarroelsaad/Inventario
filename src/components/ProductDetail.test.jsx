@@ -3,9 +3,13 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 const listarProveedoresDeProducto = vi.fn()
+const listarMovimientosPorProducto = vi.fn()
 
 vi.mock('../services/productoProveedor.js', () => ({
   listarProveedoresDeProducto: (...args) => listarProveedoresDeProducto(...args)
+}))
+vi.mock('../services/movimientos.js', () => ({
+  listarMovimientosPorProducto: (...args) => listarMovimientosPorProducto(...args)
 }))
 
 const { default: ProductDetail } = await import('./ProductDetail.jsx')
@@ -22,7 +26,9 @@ const producto = {
 
 beforeEach(() => {
   listarProveedoresDeProducto.mockReset()
+  listarMovimientosPorProducto.mockReset()
   listarProveedoresDeProducto.mockResolvedValue([{ id: 'p1', nombre: 'Distribuidora Sur' }])
+  listarMovimientosPorProducto.mockResolvedValue([])
 })
 
 describe('ProductDetail', () => {
@@ -59,6 +65,26 @@ describe('ProductDetail', () => {
 
     expect(window.confirm).toHaveBeenCalledWith('¿Seguro que querés eliminar Yerba 1kg? No se puede deshacer.')
     expect(onDelete).toHaveBeenCalled()
+  })
+
+  it('carga y muestra el historial de movimientos', async () => {
+    listarMovimientosPorProducto.mockResolvedValue([
+      { id: 'm1', tipo: 'entrada', cantidad: 10, motivo: 'Alta inicial', fecha: '2026-09-18T10:00:00Z' },
+      { id: 'm2', tipo: 'salida', cantidad: 2, motivo: null, fecha: '2026-09-20T10:00:00Z' }
+    ])
+    render(<ProductDetail producto={producto} onEdit={() => {}} onDelete={() => {}} onBack={() => {}} onMovimiento={() => {}} />)
+
+    await waitFor(() => expect(screen.getByText(/alta inicial/i)).toBeInTheDocument())
+    expect(listarMovimientosPorProducto).toHaveBeenCalledWith('A1')
+    expect(screen.getByText('+10')).toBeInTheDocument()
+    expect(screen.getByText('-2')).toBeInTheDocument()
+  })
+
+  it('no muestra la seccion de historial si el producto no tiene movimientos', async () => {
+    render(<ProductDetail producto={producto} onEdit={() => {}} onDelete={() => {}} onBack={() => {}} onMovimiento={() => {}} />)
+
+    await waitFor(() => expect(listarMovimientosPorProducto).toHaveBeenCalled())
+    expect(screen.queryByText(/historial/i)).not.toBeInTheDocument()
   })
 
   it('registrar entrada/salida llama a onMovimiento con el tipo', async () => {
