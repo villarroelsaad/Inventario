@@ -92,8 +92,8 @@ describe('ProductForm', () => {
     await user.click(screen.getByRole('option', { name: 'Bebidas' }))
     await user.type(screen.getByLabelText(/precio de venta/i), '3200')
     await user.type(screen.getByLabelText(/costo/i), '2000')
-    await user.type(screen.getByLabelText(/stock mínimo/i), '5')
-    await user.type(screen.getByLabelText(/cantidad inicial/i), '10')
+    await user.type(screen.getByLabelText(/avisar si baja de/i), '5')
+    await user.type(screen.getByLabelText(/stock actual/i), '10')
     await user.click(screen.getByLabelText('Distribuidora Sur'))
     await user.click(screen.getByRole('button', { name: /^guardar$/i }))
 
@@ -129,7 +129,7 @@ describe('ProductForm', () => {
     expect(onSave.mock.calls[0][1]).toEqual([{ proveedorId: 'p1', precioVenta: 3300, costo: 2100 }])
   })
 
-  it('editar: no muestra el campo de cantidad inicial (el stock se cambia con movimientos)', () => {
+  it('editar: no muestra el campo de stock actual (el stock se cambia con movimientos)', () => {
     render(
       <ProductForm
         producto={{ id: 'A1', nombre: 'Yerba 1kg', stock_minimo: 5 }}
@@ -137,7 +137,7 @@ describe('ProductForm', () => {
         onCancel={() => {}}
       />
     )
-    expect(screen.queryByLabelText(/cantidad inicial/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/stock actual/i)).not.toBeInTheDocument()
   })
 
   it('editar: precarga los datos existentes y el código no se puede editar', () => {

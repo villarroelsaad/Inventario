@@ -79,7 +79,7 @@ export default function ProductDetail ({ producto, onEdit, onDelete, onBack, onM
             <dd>{producto.stock}</dd>
           </div>
           <div className="dato">
-            <dt>Stock mínimo</dt>
+            <dt>Avisar si baja de</dt>
             <dd>{producto.stock_minimo}</dd>
           </div>
         </dl>

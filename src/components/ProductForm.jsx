@@ -171,7 +171,7 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
           <h2 className="form-seccion-titulo">Stock</h2>
           <div className="form-fila">
             <div className="campo">
-              <label htmlFor="producto-stock-minimo">Stock mínimo</label>
+              <label htmlFor="producto-stock-minimo">Avisar si baja de</label>
               <input
                 id="producto-stock-minimo"
                 type="number"
@@ -182,7 +182,7 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
             </div>
             {!producto && (
               <div className="campo">
-                <label htmlFor="producto-cantidad-inicial">Cantidad inicial</label>
+                <label htmlFor="producto-cantidad-inicial">Stock actual</label>
                 <input
                   id="producto-cantidad-inicial"
                   type="number"
@@ -194,7 +194,7 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
               </div>
             )}
           </div>
-          <p className="ayuda">Si el stock queda por debajo del mínimo, el producto se marca en la lista.</p>
+          <p className="ayuda">Si el stock queda por debajo de ese número, el producto se marca en la lista.</p>
         </div>
 
         {/* Sección "Foto" oculta temporalmente: da error al subir la imagen. */}
