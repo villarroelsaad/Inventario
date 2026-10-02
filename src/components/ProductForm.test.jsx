@@ -88,7 +88,8 @@ describe('ProductForm', () => {
 
     await user.type(screen.getByLabelText(/código/i), 'A1')
     await user.type(screen.getByLabelText(/nombre/i), 'Yerba 1kg')
-    await user.selectOptions(screen.getByLabelText(/categoría/i), 'c1')
+    await user.click(screen.getByLabelText(/categoría/i))
+    await user.click(screen.getByRole('option', { name: 'Bebidas' }))
     await user.type(screen.getByLabelText(/precio de venta/i), '3200')
     await user.type(screen.getByLabelText(/costo/i), '2000')
     await user.type(screen.getByLabelText(/stock mínimo/i), '5')

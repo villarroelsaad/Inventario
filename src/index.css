@@ -120,7 +120,7 @@ h1 {
   margin: 0 0 4px;
 }
 
-input, select {
+input {
   font-family: inherit;
   font-size: 1rem;
   padding: 12px 14px;
@@ -131,84 +131,76 @@ input, select {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: 36px;
-  background-image: var(--chevron);
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px 16px;
+/* Desplegable propio (componente Select.jsx): dibujado con nuestro CSS en vez de
+   depender del <select> nativo, que en Linux/Chrome pinta la lista con el widget
+   oscuro de GTK sin importar el tema de la página. */
+.ui-select { position: relative; min-width: 0; }
+
+.ui-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ui-select-valor { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ui-select-icono { width: 16px; height: 16px; flex-shrink: 0; color: var(--ink-soft); transition: rotate 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+.ui-select-trigger[aria-expanded="true"] .ui-select-icono { rotate: 180deg; }
+
+.ui-select-lista {
+  position: absolute;
+  inset-inline-start: 0;
+  top: calc(100% + 6px);
+  min-width: 100%;
+  z-index: 30;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -14px rgba(6, 12, 28, 0.35);
+  max-height: min(320px, 50vh);
+  overflow-y: auto;
+  animation: ui-select-abrir 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes ui-select-abrir {
+  from { opacity: 0; translate: 0 -4px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+.ui-select-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink);
   cursor: pointer;
 }
 
-/* Desplegables personalizables (Chrome/Edge recientes y Chrome de Android): la lista
-   que se abre usa los colores y formas de la app. Donde no está soportado (ej. Safari)
-   queda el selector nativo del sistema, que funciona igual. */
-@supports (appearance: base-select) {
-  select,
-  ::picker(select) { appearance: base-select; }
+.ui-select-opcion.activa { background: var(--hover); }
 
-  select {
-    display: flex;
-    align-items: center;
-    background-image: none;
-  }
+.ui-select-opcion[aria-selected="true"] { background: var(--primary-soft); color: var(--primary-dark); font-weight: 600; }
 
-  select::picker-icon {
-    content: '';
-    width: 16px;
-    height: 16px;
-    margin-inline-start: auto;
-    background: var(--chevron) center / 16px 16px no-repeat;
-    transition: rotate 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  select:open::picker-icon { rotate: 180deg; }
-
-  ::picker(select) {
-    margin-block: 6px;
-    padding: 6px;
-    background: var(--surface);
-    color: var(--ink);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    box-shadow: 0 18px 40px -14px rgba(6, 12, 28, 0.35);
-    max-height: min(320px, 50vh);
-    /* Estado cerrado: el cierre también se desliza en vez de desaparecer de golpe */
-    opacity: 0;
-    translate: 0 -4px;
-    transition: opacity 0.18s ease, translate 0.18s ease, overlay 0.18s allow-discrete, display 0.18s allow-discrete;
-  }
-
-  select:open::picker(select) { opacity: 1; translate: 0 0; }
-
-  @starting-style {
-    select:open::picker(select) { opacity: 0; translate: 0 -4px; }
-  }
-
-  option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 9px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
-  }
-
-  option:hover,
-  option:focus-visible { background: var(--hover); outline: none; }
-
-  option:checked { background: var(--primary-soft); color: var(--primary-dark); font-weight: 600; }
-
-  option::checkmark {
-    order: 1;
-    margin-inline-start: auto;
-    color: var(--primary);
-  }
-}
+.ui-select-check { margin-inline-start: auto; width: 16px; height: 16px; color: var(--primary); flex-shrink: 0; }
 
 input::placeholder { color: var(--ink-soft); opacity: 1; }
 
@@ -218,7 +210,7 @@ input:disabled {
 }
 
 /* Foco suave y consistente en toda la app (mismo lenguaje que el Login). */
-input:focus, select:focus {
+input:focus, .ui-select-trigger:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--focus);
@@ -229,7 +221,7 @@ input:focus, select:focus {
   outline-offset: 2px;
 }
 
-input:focus-visible, select:focus-visible { outline: none; }
+input:focus-visible, .ui-select-trigger:focus-visible { outline: none; }
 
 input[type="checkbox"] {
   width: 18px;
@@ -704,7 +696,7 @@ body:has(.login) {
   margin: 0 0 16px;
 }
 
-.product-filters select:last-child { grid-column: 1 / -1; }
+.product-filters .ui-select:last-child { grid-column: 1 / -1; }
 
 .filtro-precio { position: relative; min-width: 0; }
 
@@ -731,16 +723,11 @@ body:has(.login) {
 .filtro-precio input::-webkit-outer-spin-button,
 .filtro-precio input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-.product-filters select {
-  width: 100%;
-  min-width: 0;
-  text-overflow: ellipsis;
-  padding: 9px 34px 9px 14px;
+.product-filters .ui-select-trigger {
+  padding: 9px 14px;
   font-size: 0.88rem;
   font-weight: 500;
   border-radius: 999px;
-  background-position: right 10px center;
-  background-size: 14px 14px;
 }
 
 /* ========================================================= */
@@ -1113,7 +1100,7 @@ ul:empty { display: none; }
 }
 
 .hoja-cuerpo input:not([type="checkbox"]):not([type="file"]),
-.hoja-cuerpo select {
+.hoja-cuerpo .ui-select-trigger {
   width: 100%;
   background-color: var(--field);
   border: 1.5px solid transparent;
@@ -1122,7 +1109,7 @@ ul:empty { display: none; }
 }
 
 .hoja-cuerpo input:not([type="checkbox"]):not([type="file"]):focus,
-.hoja-cuerpo select:focus {
+.hoja-cuerpo .ui-select-trigger:focus {
   background-color: var(--surface);
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--focus);
@@ -1144,7 +1131,7 @@ ul:empty { display: none; }
 }
 
 .hoja-cuerpo .campo-icono input:not([type="checkbox"]),
-.hoja-cuerpo .campo-icono select { padding-left: 44px; }
+.hoja-cuerpo .campo-icono .ui-select-trigger { padding-left: 44px; }
 
 /* Botón dentro del campo (ej. escanear el código con la cámara) */
 .campo-icono .campo-accion {
@@ -1892,8 +1879,8 @@ ul:empty { display: none; }
 
   .product-filters { grid-template-columns: 1fr 1fr 0.7fr 0.7fr 1fr; }
   .filtro-precio input { border-radius: 12px; }
-  .product-filters select { border-radius: 12px; }
-  .product-filters select:last-child { grid-column: auto; }
+  .product-filters .ui-select-trigger { border-radius: 12px; }
+  .product-filters .ui-select:last-child { grid-column: auto; }
 
   /* La lista de productos toma aspecto de tabla: mismas columnas en la
      cabecera y en cada fila. */

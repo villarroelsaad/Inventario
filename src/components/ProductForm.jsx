@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useCategorias } from '../hooks/useCategorias.js'
 import { useProveedores } from '../hooks/useProveedores.js'
 import ModalHeader from './ModalHeader.jsx'
 import Icono from './Icono.jsx'
+import Select from './Select.jsx'
 import EscanerEnLinea from './EscanerEnLinea.jsx'
 import IndicadorMargen from './IndicadorMargen.jsx'
 
@@ -23,28 +24,14 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
     precioVenta: item.precioVenta ?? '',
     costo: item.costo ?? ''
   })))
-  const [imagenFile, setImagenFile] = useState(null)
-  const [vistaPrevia, setVistaPrevia] = useState(null)
-  const [arrastrando, setArrastrando] = useState(false)
+  // Carga de foto deshabilitada temporalmente (da error al subir), ver más abajo.
+  const imagenFile = null
   const [escaneando, setEscaneando] = useState(false)
 
   const handleCodigoLeido = useCallback((codigo) => {
     setId(codigo)
     setEscaneando(false)
   }, [])
-
-  // Vista previa local de la foto elegida (solo para mostrarla en el formulario).
-  useEffect(() => {
-    if (!imagenFile || typeof URL.createObjectURL !== 'function') {
-      setVistaPrevia(null)
-      return
-    }
-    const url = URL.createObjectURL(imagenFile)
-    setVistaPrevia(url)
-    return () => URL.revokeObjectURL(url)
-  }, [imagenFile])
-
-  const fotoVisible = vistaPrevia ?? producto?.imagen_url ?? null
 
   function toggleProveedor (proveedorId) {
     setSeleccion((actuales) =>
@@ -60,15 +47,6 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
 
   const numeroONulo = (texto) => (texto === '' ? null : Number(texto))
   const nombreProveedor = Object.fromEntries(proveedores.map((p) => [p.id, p.nombre]))
-
-  function handleSoltarFoto (event) {
-    event.preventDefault()
-    setArrastrando(false)
-    const archivo = event.dataTransfer.files?.[0]
-    if (archivo && archivo.type.startsWith('image/')) {
-      setImagenFile(archivo)
-    }
-  }
 
   function handleSubmit (event) {
     event.preventDefault()
@@ -142,12 +120,15 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
           <label htmlFor="producto-categoria">Categoría</label>
           <div className="campo-icono">
             <Icono nombre="categoria" />
-            <select id="producto-categoria" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
-              <option value="">Sin categoría</option>
-              {categorias.map((c) => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
-              ))}
-            </select>
+            <Select
+              id="producto-categoria"
+              value={categoriaId}
+              onChange={setCategoriaId}
+              options={[
+                { value: '', label: 'Sin categoría' },
+                ...categorias.map((c) => ({ value: c.id, label: c.nombre }))
+              ]}
+            />
           </div>
         </div>
 
@@ -216,31 +197,7 @@ export default function ProductForm ({ producto, codigoInicial = '', proveedores
           <p className="ayuda">Si el stock queda por debajo del mínimo, el producto se marca en la lista.</p>
         </div>
 
-        <div className="form-seccion">
-          <h2 className="form-seccion-titulo">Foto</h2>
-          <label
-            htmlFor="producto-imagen"
-            className={arrastrando ? 'dropzone arrastrando' : 'dropzone'}
-            onDragOver={(e) => { e.preventDefault(); setArrastrando(true) }}
-            onDragLeave={() => setArrastrando(false)}
-            onDrop={handleSoltarFoto}
-          >
-            {fotoVisible
-              ? <img src={fotoVisible} alt="" className="dropzone-preview" />
-              : <span className="dropzone-icono"><Icono nombre="foto" /></span>}
-            <span className="dropzone-texto">
-              <strong>{fotoVisible ? 'Cambiar foto' : 'Foto (opcional)'}</strong>
-              <span>{imagenFile ? imagenFile.name : 'Tocá para elegir una imagen o arrastrala acá'}</span>
-            </span>
-          </label>
-          <input
-            id="producto-imagen"
-            className="visualmente-oculto"
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImagenFile(e.target.files[0] ?? null)}
-          />
-        </div>
+        {/* Sección "Foto" oculta temporalmente: da error al subir la imagen. */}
 
         <fieldset className="form-seccion product-form-proveedores">
           <legend className="form-seccion-titulo">Proveedores</legend>

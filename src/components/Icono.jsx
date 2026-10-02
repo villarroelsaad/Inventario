@@ -19,7 +19,8 @@ const TRAZOS = {
   mas: <><path d="M12 5v14M5 12h14" /></>,
   menos: <><path d="M5 12h14" /></>,
   editar: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></>,
-  exportar: <><path d="M12 3v13m0 0-4-4m4 4 4-4M4 19h16" /></>
+  exportar: <><path d="M12 3v13m0 0-4-4m4 4 4-4M4 19h16" /></>,
+  chevron: <><path d="m6 9 6 6 6-6" /></>
 }
 
 export default function Icono ({ nombre, className }) {

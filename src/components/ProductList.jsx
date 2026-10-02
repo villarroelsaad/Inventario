@@ -7,6 +7,7 @@ import { estadoStock } from '../lib/estadoStock.js'
 import { filasPorProveedor, precioDeFila, costoDeFila } from '../lib/filasPorProveedor.js'
 import { calcularMargen } from '../lib/margen.js'
 import Icono from './Icono.jsx'
+import Select from './Select.jsx'
 
 export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento, version = 0 }) {
   const { productos, filtros, setFiltros, loading, error, recargar } = useProductos()
@@ -122,27 +123,25 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento, ve
       </div>
 
       <div className="product-filters">
-        <select
-          aria-label="Categoría"
+        <Select
+          ariaLabel="Categoría"
           value={filtros.categoriaId ?? ''}
-          onChange={(e) => actualizarFiltro('categoriaId', e.target.value)}
-        >
-          <option value="">Todas las categorías</option>
-          {categorias.map((c) => (
-            <option key={c.id} value={c.id}>{c.nombre}</option>
-          ))}
-        </select>
+          onChange={(valor) => actualizarFiltro('categoriaId', valor)}
+          options={[
+            { value: '', label: 'Todas las categorías' },
+            ...categorias.map((c) => ({ value: c.id, label: c.nombre }))
+          ]}
+        />
 
-        <select
-          aria-label="Proveedor"
+        <Select
+          ariaLabel="Proveedor"
           value={filtros.proveedorId ?? ''}
-          onChange={(e) => actualizarFiltro('proveedorId', e.target.value)}
-        >
-          <option value="">Todos los proveedores</option>
-          {proveedores.map((p) => (
-            <option key={p.id} value={p.id}>{p.nombre}</option>
-          ))}
-        </select>
+          onChange={(valor) => actualizarFiltro('proveedorId', valor)}
+          options={[
+            { value: '', label: 'Todos los proveedores' },
+            ...proveedores.map((p) => ({ value: p.id, label: p.nombre }))
+          ]}
+        />
 
         <div className="filtro-precio">
           <span aria-hidden="true">$</span>
@@ -170,16 +169,17 @@ export default function ProductList ({ onSelect, onAdd, onScan, onMovimiento, ve
           />
         </div>
 
-        <select
-          aria-label="Ordenar por"
+        <Select
+          ariaLabel="Ordenar por"
           value={filtros.orden ?? 'nombre'}
-          onChange={(e) => actualizarFiltro('orden', e.target.value)}
-        >
-          <option value="nombre">A-Z</option>
-          <option value="precio">Precio</option>
-          <option value="cantidad">Cantidad</option>
-          <option value="reciente">Más reciente</option>
-        </select>
+          onChange={(valor) => actualizarFiltro('orden', valor)}
+          options={[
+            { value: 'nombre', label: 'A-Z' },
+            { value: 'precio', label: 'Precio' },
+            { value: 'cantidad', label: 'Cantidad' },
+            { value: 'reciente', label: 'Más reciente' }
+          ]}
+        />
       </div>
 
       {loading && productos.length === 0 && <p className="cargando">Cargando...</p>}
