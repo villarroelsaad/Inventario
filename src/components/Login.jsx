@@ -27,7 +27,6 @@ export default function Login () {
       </div>
 
       <h1>Ingresar</h1>
-      <p className="login-subtitulo">Accedé para gestionar el stock del negocio.</p>
 
       <form onSubmit={handleSubmit}>
         <label htmlFor="login-email">Usuario</label>
